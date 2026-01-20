@@ -1,5 +1,9 @@
 Ignore runtime data
-cyber_favorites.jsoncyber_history.jsoncyber_config.jsonpycache/*.pyc
+cyber_favorites.json
+cyber_history.json
+cyber_config.json
+pycache/*.pyc
 Ignore system files
 .DS_Store
 GEMINI.md
+.gitignore
