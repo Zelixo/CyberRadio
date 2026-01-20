@@ -1,43 +1,60 @@
-Cyber Radio (Native GTK4)
+# Cyber Radio (Native GTK4)
 
 A high-fidelity, synthwave-themed internet radio player for Linux.
 Features a dynamic pixel-art cat visualization, physics-based spectrum analyzer, and AzuraCast API integration.
 
-Dependencies (Arch Linux)
+## Features
+*   **Synthwave Aesthetic:** Custom GTK4 styling with a neon palette.
+*   **Visualizations:** Custom "Vector Cat" and spectrum animations.
+*   **Robust Playback:** Powered by MPV, supporting standard streams and YouTube (via yt-dlp).
+*   **Station Management:** Add custom stations and manage favorites locally.
 
-Ensure you have the required system libraries and Python packages installed:
+## Supported Distributions
+The installer script currently supports automatic dependency installation for:
+*   Arch Linux / Manjaro / EndeavourOS
+*   Debian / Ubuntu / Linux Mint
+*   Fedora
 
-sudo pacman -S python-gobject gtk4 libadwaita mpv python-mpv yt-dlp
+## Installation
 
+1.  **Clone the repository** (if you haven't already):
+    ```bash
+    git clone https://github.com/Zelixo/CyberRadio.git
+    cd CyberRadio
+    ```
 
-python-gobject / gtk4 / libadwaita: The UI toolkit.
+2.  **Run the installer:**
+    ```bash
+    chmod +x install.sh
+    ./install.sh
+    ```
 
-mpv: The audio engine.
+    This will:
+    *   Install system dependencies (requires `sudo`).
+    *   Install the app to `~/Apps/CyberRadio`.
+    *   Create a desktop shortcut and icon.
 
-python-mpv: Python bindings for MPV.
+3.  **Launch:**
+    Open "Cyber Radio" from your application menu.
 
-yt-dlp: Required for playing the "Lofi Girl" YouTube stream.
+## Manual Usage
 
-Installation
+You can run the application directly from the source directory without installing:
 
-Place native_radio.py, CyberRadio.desktop, and install.sh in the same folder.
-
-Run the installer script:
-
-chmod +x install.sh
-./install.sh
-
-
-This will:
-
-Create a folder at ~/Apps/CyberRadio.
-
-Move the application script there.
-
-Install the Desktop Shortcut to your system menu.
-
-Manual Usage
-
-You can always run the app directly from the terminal:
-
+```bash
 python3 native_radio.py
+```
+
+## Uninstallation
+
+To remove the application and shortcuts (system dependencies will remain):
+
+```bash
+./uninstall.sh
+```
+
+## Project Structure
+*   `src/`: Source code modules (UI, Core, Config).
+*   `assets/`: Icons and CSS styles.
+*   `native_radio.py`: Entry point script.
+*   `install.sh` / `uninstall.sh`: Setup scripts.
