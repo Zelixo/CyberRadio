@@ -8,7 +8,7 @@ __pycache__/
 *.pyc
 
 # System files
+
 .DS_Store
 
-# Documentation
-GEMINI.md
+
