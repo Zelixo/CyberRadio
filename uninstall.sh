@@ -3,10 +3,8 @@
 # Configuration
 APP_DIR="$HOME/Apps/CyberRadio"
 DESKTOP_FILE="CyberRadio.desktop"
-ICON_FILE="cyber-radio.png"
 
 SYSTEM_DESKTOP_FILE="$HOME/.local/share/applications/$DESKTOP_FILE"
-SYSTEM_ICON_FILE="$HOME/.local/share/icons/hicolor/256x256/apps/$ICON_FILE"
 
 # Colors
 GREEN='\033[0;32m'
@@ -39,15 +37,6 @@ if [ -f "$SYSTEM_DESKTOP_FILE" ]; then
     update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
 else
     echo -e "${YELLOW}:: Desktop shortcut not found.${NC}"
-fi
-
-# --- 3. REMOVE ICON ---
-if [ -f "$SYSTEM_ICON_FILE" ]; then
-    echo ":: Removing icon..."
-    rm "$SYSTEM_ICON_FILE"
-    gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
-else
-    echo -e "${YELLOW}:: Icon not found.${NC}"
 fi
 
 echo -e "${GREEN}:: Uninstallation Complete.${NC}"

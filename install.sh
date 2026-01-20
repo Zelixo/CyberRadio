@@ -4,10 +4,8 @@
 APP_DIR="$HOME/Apps/CyberRadio"
 SOURCE_SCRIPT="native_radio.py"
 DESKTOP_FILE="CyberRadio.desktop"
-ICON_FILE="cyber-radio.png"
 
 SYSTEM_DESKTOP_DIR="$HOME/.local/share/applications"
-SYSTEM_ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps" # Changed to fixed size for PNG
 
 # Colors
 GREEN='\033[0;32m'
@@ -43,10 +41,7 @@ install_arch() {
 }
 
 install_debian() {
-    # Debian/Ubuntu dependencies
-    # Note: python3-mpv and yt-dlp might need pip on older distros, but trying system first
     DEPENDENCIES=("python3-gi" "libgtk-4-1" "libadwaita-1-0" "mpv" "python3-mpv" "yt-dlp")
-    
     echo ":: Updating apt cache..."
     sudo apt update
     echo ":: Installing dependencies..."
@@ -98,7 +93,7 @@ fi
 
 # Copy Modules
 if [ -d "src" ]; then
-    rm -rf "$APP_DIR/src" # Clean old
+    rm -rf "$APP_DIR/src"
     cp -r "src" "$APP_DIR/"
 else
     echo -e "${RED}Error: 'src' directory not found.${NC}"
@@ -107,23 +102,14 @@ fi
 
 # Copy Assets
 if [ -d "assets" ]; then
-    rm -rf "$APP_DIR/assets" # Clean old
+    rm -rf "$APP_DIR/assets"
     cp -r "assets" "$APP_DIR/"
 else
     echo -e "${RED}Error: 'assets' directory not found.${NC}"
     exit 1
 fi
 
-# --- 4. INSTALL ICON ---
-if [ -f "$ICON_FILE" ]; then
-    echo ":: Installing icon..."
-    mkdir -p "$SYSTEM_ICON_DIR"
-    cp "$ICON_FILE" "$SYSTEM_ICON_DIR/$ICON_FILE"
-else
-    echo -e "${YELLOW}Warning: $ICON_FILE not found.${NC}"
-fi
-
-# --- 5. INSTALL DESKTOP SHORTCUT ---
+# --- 4. INSTALL DESKTOP SHORTCUT ---
 if [ -f "$DESKTOP_FILE" ]; then
     echo ":: Configuring desktop shortcut..."
     # Replace {HOME} placeholder with actual home path
@@ -131,7 +117,6 @@ if [ -f "$DESKTOP_FILE" ]; then
 
     # Refresh databases
     update-desktop-database "$SYSTEM_DESKTOP_DIR" 2>/dev/null
-    gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 
     echo ":: Desktop shortcut installed."
 else
