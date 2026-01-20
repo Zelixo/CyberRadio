@@ -5,7 +5,7 @@ Name=Cyber Radio
 Comment=Synthwave Internet Radio
 # The installer script will replace {HOME} with the actual path
 Exec=python3 {HOME}/Apps/CyberRadio/native_radio.py
-Icon=cyber-radio
+Icon=cyber-radio.png
 Terminal=false
 Categories=Audio;Music;Player;GTK;
 StartupNotify=true
