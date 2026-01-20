@@ -1,9 +1,36 @@
 import urllib.request
 import threading
+import re
 from gi.repository import GdkPixbuf, Gdk, GLib, Gtk
 import logging
 
 logger = logging.getLogger(__name__)
+
+def clean_metadata_title(title_str):
+    """
+    Cleans up metadata strings that contain structured key-value pairs.
+    Example Input: 'Eagle-Eye Cherry - text="Save Tonight" song_spot="M" ...'
+    Example Output: 'Eagle-Eye Cherry - Save Tonight'
+    """
+    if not title_str:
+        return ""
+
+    # Check for 'text="Title"' pattern
+    match = re.search(r'text="([^"]+)"', title_str)
+    if match:
+        extracted_title = match.group(1)
+        
+        # Check if there is an artist prefix before ' - text='
+        # We assume the separator is " - " before the structured part
+        parts = title_str.split(' - text=')
+        if len(parts) > 1:
+            artist = parts[0].strip()
+            return f"{artist} - {extracted_title}"
+        
+        # If no artist prefix, just return the title
+        return extracted_title
+        
+    return title_str
 
 def load_image_into(url, widget, loaded_textures_cache, size=None):
     if not url:

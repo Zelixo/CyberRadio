@@ -9,7 +9,7 @@ from src.core.player import AudioPlayer
 from src.core.api import search_stations, fetch_azuracast_nowplaying
 from src.ui.visuals import VectorCat
 from src.ui.dialogs import AddStationDialog
-from src.ui.utils import load_image_into
+from src.ui.utils import load_image_into, clean_metadata_title
 
 logger = logging.getLogger(__name__)
 
@@ -332,7 +332,8 @@ class MainWindow(Adw.ApplicationWindow):
 
     def on_mpv_metadata(self, track_name):
         if not self.is_azuracast:
-            self.track_label.set_label(track_name)
+            cleaned_name = clean_metadata_title(track_name)
+            self.track_label.set_label(cleaned_name)
 
     def on_station_selected(self, box, row):
         if row and row.get_child().station_data:
