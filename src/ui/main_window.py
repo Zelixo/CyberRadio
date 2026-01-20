@@ -7,6 +7,7 @@ from gi.repository import Gtk, Adw, GLib, Gio, Gdk
 from src.config import FAVORITES_FILE, DEFAULT_STATIONS
 from src.core.player import AudioPlayer
 from src.core.api import search_stations, fetch_azuracast_nowplaying
+from src.core.metadata import fetch_album_art
 from src.ui.visuals import VectorCat
 from src.ui.dialogs import AddStationDialog
 from src.ui.utils import load_image_into, clean_metadata_title
@@ -324,6 +325,12 @@ class MainWindow(Adw.ApplicationWindow):
             del_btn = Gtk.Button(icon_name="user-trash-symbolic")
             del_btn.add_css_class("flat")
             del_btn.connect("clicked", lambda b, s=station: self.delete_favorite_direct(s))
+            
+            edit_btn = Gtk.Button(icon_name="document-edit-symbolic")
+            edit_btn.add_css_class("flat")
+            edit_btn.connect("clicked", lambda b, s=station: self.on_edit_clicked(s))
+
+            row_content.add_suffix(edit_btn)
             row_content.add_suffix(del_btn)
 
             list_row = Gtk.ListBoxRow()
@@ -334,6 +341,18 @@ class MainWindow(Adw.ApplicationWindow):
         if not self.is_azuracast:
             cleaned_name = clean_metadata_title(track_name)
             self.track_label.set_label(cleaned_name)
+            # Trigger dynamic art lookup
+            threading.Thread(target=self._update_dynamic_art, args=(cleaned_name,), daemon=True).start()
+
+    def _update_dynamic_art(self, track_name):
+        art_url = fetch_album_art(track_name)
+        if art_url:
+             GLib.idle_add(load_image_into, art_url, self.art_picture, self._loaded_textures)
+        else:
+             # Fallback to station logo if no art found for this track
+             if self.current_station_data:
+                 logo = self.current_station_data.get('favicon')
+                 GLib.idle_add(load_image_into, logo, self.art_picture, self._loaded_textures)
 
     def on_station_selected(self, box, row):
         if row and row.get_child().station_data:
@@ -396,11 +415,28 @@ class MainWindow(Adw.ApplicationWindow):
     def on_add_custom_clicked(self, btn):
         AddStationDialog(self, self.add_custom_station).present()
 
-    def add_custom_station(self, data):
-        self.favorites.append(data)
+    def on_edit_clicked(self, station_data):
+        AddStationDialog(self, self.add_custom_station, station_data=station_data).present()
+
+    def add_custom_station(self, data, old_data=None):
+        if old_data:
+            # Update existing
+            for i, fav in enumerate(self.favorites):
+                if fav.get('url_resolved') == old_data.get('url_resolved'):
+                    self.favorites[i] = data
+                    break
+        else:
+            self.favorites.append(data)
+            
         self.save_favorites()
         if not self.search_entry.get_text():
             self._populate_list(self.favorites)
+        
+        # If we updated the currently playing station, update the UI
+        if self.current_station_data and old_data and self.current_station_data.get('url_resolved') == old_data.get('url_resolved'):
+            self.current_station_data = data
+            self.station_label.set_label(data.get('name'))
+            load_image_into(data.get('favicon'), self.art_picture, self._loaded_textures)
 
     def toggle_play(self):
         if self.current_station_data:

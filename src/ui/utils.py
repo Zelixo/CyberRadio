@@ -1,6 +1,7 @@
 import urllib.request
 import threading
 import re
+import os
 from gi.repository import GdkPixbuf, Gdk, GLib, Gtk
 import logging
 
@@ -31,7 +32,6 @@ def clean_metadata_title(title_str):
         return extracted_title
         
     return title_str
-
 def load_image_into(url, widget, loaded_textures_cache, size=None):
     if not url:
         if isinstance(widget, Gtk.Picture):
@@ -44,6 +44,16 @@ def load_image_into(url, widget, loaded_textures_cache, size=None):
 
     def worker():
         try:
+            # Handle local files
+            if os.path.exists(url):
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(url)
+                if size:
+                    pixbuf = pixbuf.scale_simple(size, size, GdkPixbuf.InterpType.BILINEAR)
+                texture = Gdk.Texture.new_for_pixbuf(pixbuf)
+                GLib.idle_add(_cache_and_set_generic, url, texture, widget, loaded_textures_cache)
+                return
+
+            # Handle remote URLs
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = resp.read()
