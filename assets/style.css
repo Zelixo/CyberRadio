@@ -1,0 +1,67 @@
+.cyber-window {
+    background-color: #050510;
+    color: #e0e0ff;
+}
+
+/* Sidebar styling */
+.sidebar-box {
+    background-color: #08080c;
+    border-right: 1px solid #1a1a2e;
+}
+
+.boxed-list {
+    background-color: transparent;
+    color: #e0e0ff;
+}
+
+row:selected {
+    background-color: #2a0033;
+    color: #00f3ff;
+    border-left: 2px solid #ff00ff;
+}
+
+/* Player Area */
+.player-container {
+    background: linear-gradient(160deg, #0f0f20 0%, #050510 100%);
+    padding: 20px;
+}
+
+.track-title {
+    color: #ff00ff;
+    font-weight: 900;
+    font-size: 22px;
+    text-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
+.station-name {
+    color: #00f3ff;
+    font-weight: bold;
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 10px;
+}
+
+/* Buttons */
+button.suggested-action {
+    background: linear-gradient(135deg, #bd00ff 0%, #00f3ff 100%);
+    color: #000000;
+    font-weight: 800;
+    border: none;
+    box-shadow: 0 0 20px rgba(189, 0, 255, 0.3);
+}
+
+button.suggested-action:hover {
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+}
+
+/* Sliders */
+scale trough {
+    background-color: #2a2a40;
+    min-height: 4px;
+    border-radius: 2px;
+}
+
+scale highlight {
+    background: linear-gradient(to right, #ff00ff, #00f3ff);
+    border-radius: 2px;
+}

@@ -4,13 +4,10 @@
 APP_DIR="$HOME/Apps/CyberRadio"
 SOURCE_SCRIPT="native_radio.py"
 DESKTOP_FILE="CyberRadio.desktop"
-ICON_FILE="cyber-radio.svg"
+ICON_FILE="cyber-radio.png"
 
 SYSTEM_DESKTOP_DIR="$HOME/.local/share/applications"
-SYSTEM_ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
-
-# Dependencies list (Arch Linux package names)
-DEPENDENCIES=("python-gobject" "gtk4" "libadwaita" "mpv" "python-mpv" "yt-dlp")
+SYSTEM_ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps" # Changed to fixed size for PNG
 
 # Colors
 GREEN='\033[0;32m'
@@ -20,29 +17,66 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}:: Starting Cyber Radio Installation...${NC}"
 
-# --- 1. DEPENDENCY CHECK ---
-echo -e "${YELLOW}:: Checking system dependencies...${NC}"
-MISSING_PKGS=()
-
-for pkg in "${DEPENDENCIES[@]}"; do
-    if ! pacman -Qi "$pkg" &> /dev/null; then
-        MISSING_PKGS+=("$pkg")
-    fi
-done
-
-if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
-    echo -e "${RED}:: Missing packages found: ${MISSING_PKGS[*]}${NC}"
-    echo ":: Attempting to install missing dependencies (requires sudo)..."
-
-    if sudo pacman -S --noconfirm "${MISSING_PKGS[@]}"; then
-        echo -e "${GREEN}:: Dependencies installed successfully.${NC}"
-    else
-        echo -e "${RED}:: Failed to install dependencies. Please install them manually and run this script again.${NC}"
-        exit 1
-    fi
+# --- 1. DETECT OS & INSTALL DEPENDENCIES ---
+echo -e "${YELLOW}:: Detecting Operating System...${NC}"
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
 else
-    echo -e "${GREEN}:: All dependencies are installed.${NC}"
+    echo -e "${RED}:: Cannot detect OS. Skipping dependency check.${NC}"
+    OS="unknown"
 fi
+
+install_arch() {
+    DEPENDENCIES=("python-gobject" "gtk4" "libadwaita" "mpv" "python-mpv" "yt-dlp")
+    MISSING_PKGS=()
+    for pkg in "${DEPENDENCIES[@]}"; do
+        if ! pacman -Qi "$pkg" &> /dev/null; then
+            MISSING_PKGS+=("$pkg")
+        fi
+    done
+    
+    if [ ${#MISSING_PKGS[@]} -ne 0 ]; then
+        echo ":: Installing missing dependencies: ${MISSING_PKGS[*]}"
+        sudo pacman -S --noconfirm "${MISSING_PKGS[@]}"
+    fi
+}
+
+install_debian() {
+    # Debian/Ubuntu dependencies
+    # Note: python3-mpv and yt-dlp might need pip on older distros, but trying system first
+    DEPENDENCIES=("python3-gi" "libgtk-4-1" "libadwaita-1-0" "mpv" "python3-mpv" "yt-dlp")
+    
+    echo ":: Updating apt cache..."
+    sudo apt update
+    echo ":: Installing dependencies..."
+    sudo apt install -y "${DEPENDENCIES[@]}"
+}
+
+install_fedora() {
+    DEPENDENCIES=("python3-gobject" "gtk4" "libadwaita" "mpv" "python3-mpv" "yt-dlp")
+    echo ":: Installing dependencies..."
+    sudo dnf install -y "${DEPENDENCIES[@]}"
+}
+
+case $OS in
+    arch|manjaro|endeavouros)
+        echo ":: Detected Arch-based system."
+        install_arch
+        ;;
+    debian|ubuntu|pop|linuxmint)
+        echo ":: Detected Debian/Ubuntu-based system."
+        install_debian
+        ;;
+    fedora)
+        echo ":: Detected Fedora."
+        install_fedora
+        ;;
+    *)
+        echo -e "${YELLOW}:: Unsupported or unknown OS ($OS). Please ensure dependencies are installed manually:${NC}"
+        echo "   GTK4, Libadwaita, Python GObject, MPV, Python-MPV, yt-dlp"
+        ;;
+esac
 
 # --- 2. CREATE DIRECTORY ---
 if [ ! -d "$APP_DIR" ]; then
@@ -50,13 +84,33 @@ if [ ! -d "$APP_DIR" ]; then
     mkdir -p "$APP_DIR"
 fi
 
-# --- 3. COPY APPLICATION ---
+# --- 3. COPY APPLICATION FILES ---
+echo ":: Copying application files..."
+
+# Copy Entry Point
 if [ -f "$SOURCE_SCRIPT" ]; then
-    echo ":: Copying application script..."
     cp "$SOURCE_SCRIPT" "$APP_DIR/"
     chmod +x "$APP_DIR/$SOURCE_SCRIPT"
 else
-    echo -e "${RED}Error: $SOURCE_SCRIPT not found in current directory.${NC}"
+    echo -e "${RED}Error: $SOURCE_SCRIPT not found.${NC}"
+    exit 1
+fi
+
+# Copy Modules
+if [ -d "src" ]; then
+    rm -rf "$APP_DIR/src" # Clean old
+    cp -r "src" "$APP_DIR/"
+else
+    echo -e "${RED}Error: 'src' directory not found.${NC}"
+    exit 1
+fi
+
+# Copy Assets
+if [ -d "assets" ]; then
+    rm -rf "$APP_DIR/assets" # Clean old
+    cp -r "assets" "$APP_DIR/"
+else
+    echo -e "${RED}Error: 'assets' directory not found.${NC}"
     exit 1
 fi
 
@@ -64,9 +118,9 @@ fi
 if [ -f "$ICON_FILE" ]; then
     echo ":: Installing icon..."
     mkdir -p "$SYSTEM_ICON_DIR"
-    cp "$ICON_FILE" "$SYSTEM_ICON_DIR/"
+    cp "$ICON_FILE" "$SYSTEM_ICON_DIR/$ICON_FILE"
 else
-    echo -e "${YELLOW}Warning: $ICON_FILE not found. App will use generic system icon.${NC}"
+    echo -e "${YELLOW}Warning: $ICON_FILE not found.${NC}"
 fi
 
 # --- 5. INSTALL DESKTOP SHORTCUT ---
@@ -79,11 +133,11 @@ if [ -f "$DESKTOP_FILE" ]; then
     update-desktop-database "$SYSTEM_DESKTOP_DIR" 2>/dev/null
     gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 
-    echo ":: Desktop shortcut installed to $SYSTEM_DESKTOP_DIR/$DESKTOP_FILE"
+    echo ":: Desktop shortcut installed."
 else
-    echo -e "${YELLOW}Warning: $DESKTOP_FILE not found. Skipping shortcut creation.${NC}"
+    echo -e "${YELLOW}Warning: $DESKTOP_FILE not found.${NC}"
 fi
 
 echo -e "${GREEN}:: Installation Complete!${NC}"
-echo "You can now find 'Cyber Radio' in your application menu."
-echo "Or run it manually: python3 $APP_DIR/$SOURCE_SCRIPT"
+echo "You can now run 'Cyber Radio' from your menu or via:"
+echo "python3 $APP_DIR/$SOURCE_SCRIPT"
