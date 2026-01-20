@@ -5,5 +5,3 @@ cyber_config.json
 pycache/*.pyc
 Ignore system files
 .DS_Store
-GEMINI.md
-.gitignore
