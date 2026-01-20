@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Cyber Radio
+Comment=Synthwave Internet Radio
+# The installer script will replace {HOME} with the actual path
+Exec=python3 {HOME}/Apps/CyberRadio/native_radio.py
+Icon=cyber-radio
+Terminal=false
+Categories=Audio;Music;Player;GTK;
+StartupNotify=true
+Actions=Play;
+
+[Desktop Action Play]
+Name=Play/Pause
+Exec=python3 {HOME}/Apps/CyberRadio/native_radio.py --play

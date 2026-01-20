@@ -1,0 +1,77 @@
+[
+  {
+    "changeuuid": "9e9a8a20-e93b-4f19-b825-649324399fdf",
+    "stationuuid": "92f9b796-16d2-4515-9fd8-b10134761dcd",
+    "serveruuid": null,
+    "name": "NoLife-Radio",
+    "url": "http://listen.nolife-radio.com/",
+    "url_resolved": "http://listen.nolife-radio.com/",
+    "homepage": "https://nolife-radio.com/",
+    "favicon": "https://nolife-radio.com/favicon.png",
+    "tags": "",
+    "country": "The United States Of America",
+    "countrycode": "US",
+    "iso_3166_2": "",
+    "state": "",
+    "language": "",
+    "languagecodes": "",
+    "votes": 3,
+    "lastchangetime": "2026-01-14 22:54:07",
+    "lastchangetime_iso8601": "2026-01-14T22:54:07Z",
+    "codec": "MP3",
+    "bitrate": 96,
+    "hls": 0,
+    "lastcheckok": 1,
+    "lastchecktime": "2026-01-14 23:31:24",
+    "lastchecktime_iso8601": "2026-01-14T23:31:24Z",
+    "lastcheckoktime": "2026-01-14 23:31:24",
+    "lastcheckoktime_iso8601": "2026-01-14T23:31:24Z",
+    "lastlocalchecktime": "2026-01-14 23:31:24",
+    "lastlocalchecktime_iso8601": "2026-01-14T23:31:24Z",
+    "clicktimestamp": "",
+    "clicktimestamp_iso8601": null,
+    "clickcount": 0,
+    "clicktrend": 0,
+    "ssl_error": 0,
+    "geo_lat": null,
+    "geo_long": null,
+    "geo_distance": null,
+    "has_extended_info": false
+  },
+  {
+    "name": "Night City Radio",
+    "url_resolved": "https://radio.zelixo.net/listen/night_city_radio/ncradio",
+    "countrycode": "NC",
+    "favicon": "https://radio.zelixo.net/static/uploads/night_city_radio/album_art.1759461316.png"
+  },
+  {
+    "name": "Japan EDM",
+    "url_resolved": "https://radio.zelixo.net/listen/japedm/radio.flac",
+    "countrycode": "JP",
+    "favicon": "https://radio.zelixo.net/static/uploads/japedm/album_art.1744086733.jpg"
+  },
+  {
+    "name": "DJ Zel Radio",
+    "url_resolved": "https://radio.zelixo.net/listen/dj_zel/radio.mp3",
+    "countrycode": "ZL",
+    "favicon": "https://radio.zelixo.net/static/uploads/dj_zel/album_art.1737590207.png"
+  },
+  {
+    "name": "ACNH Radio",
+    "url_resolved": "https://radio.zelixo.net/listen/acnh_radio/radio.mp3",
+    "countrycode": "AC",
+    "favicon": "https://radio.zelixo.net/static/uploads/acnh_radio/album_art.1757640781.jpg"
+  },
+  {
+    "name": "Lofi Girl",
+    "url_resolved": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+    "countrycode": "FR",
+    "favicon": "https://yt3.googleusercontent.com/ytc/AIdro_k4kF9xXq8vG5Q-7Jd3yR-u3Q1v7g-X3y9x-g=s900-c-k-c0x00ffffff-no-rj"
+  },
+  {
+    "name": "Nostalgia OST",
+    "url_resolved": "https://radio.zelixo.net/listen/nostalgia_ost/stream",
+    "countrycode": "OST",
+    "favicon": "https://radio.zelixo.net/static/uploads/nostalgia_ost/album_art.1737523202.png"
+  }
+]

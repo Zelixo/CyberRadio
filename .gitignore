@@ -1,0 +1,4 @@
+Ignore runtime data
+cyber_favorites.jsoncyber_history.jsoncyber_config.jsonpycache/*.pyc
+Ignore system files
+.DS_Store
