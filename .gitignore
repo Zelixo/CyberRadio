@@ -1,7 +1,14 @@
-Ignore runtime data
+# Runtime data
 cyber_favorites.json
 cyber_history.json
 cyber_config.json
-pycache/*.pyc
-Ignore system files
+
+# Python
+__pycache__/
+*.pyc
+
+# System files
 .DS_Store
+
+# Documentation
+GEMINI.md
