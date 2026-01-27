@@ -33,9 +33,12 @@ class MainWindow(Adw.ApplicationWindow):
         self._loaded_textures = {}
         self.recognizer = SongRecognizer()
 
-        # --- ROOT BOX ---
+        # --- TOAST OVERLAY & ROOT BOX ---
+        self.toast_overlay = Adw.ToastOverlay()
+        self.set_content(self.toast_overlay)
+
         root_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.set_content(root_box)
+        self.toast_overlay.set_child(root_box)
 
         # --- HEADER BAR ---
         header_bar = Adw.HeaderBar()
@@ -373,12 +376,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _show_toast(self, message):
         toast = Adw.Toast.new(message)
         toast.set_timeout(4)
-        
-        # We need an overlay to show toasts. 
-        # Check if we have one, if not, wrapping the content in one would be a larger refactor.
-        # Let's check if the root is an Overlay or if Adw.Window supports add_toast directly.
-        # Adw.ApplicationWindow has 'add_toast' method!
-        self.add_toast(toast)
+        self.toast_overlay.add_toast(toast)
 
     def on_mpv_metadata(self, track_name):
         if not self.is_azuracast:
