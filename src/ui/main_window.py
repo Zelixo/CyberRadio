@@ -8,6 +8,7 @@ from src.config import FAVORITES_FILE, DEFAULT_STATIONS
 from src.core.player import AudioPlayer
 from src.core.api import search_stations, fetch_azuracast_nowplaying
 from src.core.metadata import fetch_album_art
+from src.core.recognition import SongRecognizer
 from src.ui.visuals import VectorCat
 from src.ui.dialogs import AddStationDialog
 from src.ui.utils import load_image_into, clean_metadata_title
@@ -30,6 +31,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.is_azuracast = False
         self._discontinuity_timer = None
         self._loaded_textures = {}
+        self.recognizer = SongRecognizer()
 
         # --- ROOT BOX ---
         root_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -47,6 +49,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.status_label = Gtk.Label(label="Ready")
         self.status_label.add_css_class("dim-label")
         header_bar.set_title_widget(self.status_label)
+
+        recognize_btn = Gtk.Button(icon_name="audio-input-microphone-symbolic")
+        recognize_btn.set_tooltip_text("Identify Song (Shazam)")
+        recognize_btn.connect("clicked", self.on_recognize_clicked)
+        header_bar.pack_end(recognize_btn)
 
         # --- FLAP (SIDEBAR LAYOUT) ---
         self.flap = Adw.Flap()
@@ -336,6 +343,42 @@ class MainWindow(Adw.ApplicationWindow):
             list_row = Gtk.ListBoxRow()
             list_row.set_child(row_content)
             self.list_box.append(list_row)
+
+    # --- RECOGNITION LOGIC ---
+    def on_recognize_clicked(self, btn):
+        if not self.current_station_data:
+            self._show_toast("Play a station first!")
+            return
+
+        self._show_toast("Listening (approx. 10s)...")
+        url = self.current_station_data.get('url_resolved') or self.current_station_data.get('url')
+        threading.Thread(target=self._perform_recognition, args=(url,), daemon=True).start()
+
+    def _perform_recognition(self, stream_url):
+        result = self.recognizer.identify(stream_url)
+        GLib.idle_add(self._on_recognition_complete, result)
+
+    def _on_recognition_complete(self, result):
+        if not result:
+            self._show_toast("Could not identify song.")
+            return
+
+        title = result.get('title', 'Unknown')
+        artist = result.get('artist', 'Unknown')
+        self._show_toast(f"Found: {artist} - {title}")
+        
+        # Optional: Update UI immediately if user wants, but Toast is safer for now.
+        # We could also copy to clipboard here.
+
+    def _show_toast(self, message):
+        toast = Adw.Toast.new(message)
+        toast.set_timeout(4)
+        
+        # We need an overlay to show toasts. 
+        # Check if we have one, if not, wrapping the content in one would be a larger refactor.
+        # Let's check if the root is an Overlay or if Adw.Window supports add_toast directly.
+        # Adw.ApplicationWindow has 'add_toast' method!
+        self.add_toast(toast)
 
     def on_mpv_metadata(self, track_name):
         if not self.is_azuracast:

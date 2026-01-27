@@ -15,6 +15,13 @@ The installer script currently supports automatic dependency installation for:
 *   Debian / Ubuntu / Linux Mint
 *   Fedora
 
+**Note on Song Identification:**
+To use the "Identify Song" feature, you must install the `shazamio` library manually (as it is not typically in system repositories):
+```bash
+pip install shazamio --break-system-packages
+# OR use a virtual environment
+```
+
 ## Installation
 
 1.  **Clone the repository** (if you haven't already):
