@@ -56,16 +56,13 @@ class SongRecognizer:
             # Run ffmpeg (blocking, but this entire identify method will run in a thread)
             # Suppress output unless error
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
+            logger.info("FFmpeg capture complete. Starting recognition...")
 
             # 3. Recognize using ShazamIO
-            # specific loop handling for running async code from sync context
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            result = loop.run_until_complete(self._recognize_async(temp_file))
+            # Use asyncio.run() which manages a fresh event loop for this thread safely
+            result = asyncio.run(self._recognize_async(temp_file))
+
+            logger.info("Recognition finished.")
 
             if not result:
                 return None
