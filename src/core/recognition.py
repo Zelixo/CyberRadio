@@ -9,11 +9,13 @@ logger = logging.getLogger(__name__)
 
 class SongRecognizer:
     def __init__(self):
-        self.shazam = Shazam()
+        pass
 
     async def _recognize_async(self, file_path):
         try:
-            out = await self.shazam.recognize(file_path)
+            # Instantiate here to ensure it uses the current thread's event loop
+            shazam = Shazam()
+            out = await shazam.recognize(file_path)
             return out
         except Exception as e:
             logger.error(f"Shazam recognition failed: {e}")
