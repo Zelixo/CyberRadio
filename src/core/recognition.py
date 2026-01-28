@@ -35,7 +35,9 @@ class SongRecognizer:
             if "youtube.com" in stream_url or "youtu.be" in stream_url:
                 try:
                     logger.info("Resolving YouTube stream URL...")
-                    yt_cmd = ["yt-dlp", "-g", "-f", "bestaudio", stream_url]
+                    # For live streams, 'bestaudio' might not exist separately.
+                    # 'best' will get the HLS manifest which ffmpeg can handle.
+                    yt_cmd = ["yt-dlp", "-g", "-f", "best", stream_url]
                     yt_res = subprocess.run(yt_cmd, capture_output=True, text=True, check=True)
                     resolved = yt_res.stdout.strip()
                     if resolved:
