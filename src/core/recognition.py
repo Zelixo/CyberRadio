@@ -30,13 +30,27 @@ class SongRecognizer:
 
             logger.info(f"Capturing {duration}s of audio from {stream_url} to {temp_file}...")
 
-            # 2. Capture audio using ffmpeg
+            # 2. Resolve YouTube URL if needed
+            capture_url = stream_url
+            if "youtube.com" in stream_url or "youtu.be" in stream_url:
+                try:
+                    logger.info("Resolving YouTube stream URL...")
+                    yt_cmd = ["yt-dlp", "-g", "-f", "bestaudio", stream_url]
+                    yt_res = subprocess.run(yt_cmd, capture_output=True, text=True, check=True)
+                    resolved = yt_res.stdout.strip()
+                    if resolved:
+                        capture_url = resolved
+                except Exception as e:
+                    logger.error(f"Failed to resolve YouTube URL: {e}")
+                    # Fallback to original URL, though ffmpeg might fail
+
+            # 3. Capture audio using ffmpeg
             # songrec is robust, so we can just grab standard audio
             cmd = [
                 "ffmpeg",
                 "-y",
                 "-t", str(duration),
-                "-i", stream_url,
+                "-i", capture_url,
                 "-vn",
                 "-f", "mp3",
                 temp_file
@@ -45,7 +59,7 @@ class SongRecognizer:
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
             logger.info("FFmpeg capture complete. Running songrec...")
 
-            # 3. Call songrec
+            # 4. Call songrec
             # Command: songrec audio-file-to-recognized-song <file>
             res = subprocess.run(
                 ["songrec", "audio-file-to-recognized-song", temp_file],

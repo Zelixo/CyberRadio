@@ -53,11 +53,6 @@ class MainWindow(Adw.ApplicationWindow):
         self.status_label.add_css_class("dim-label")
         header_bar.set_title_widget(self.status_label)
 
-        recognize_btn = Gtk.Button(icon_name="audio-input-microphone-symbolic")
-        recognize_btn.set_tooltip_text("Identify Song (Shazam)")
-        recognize_btn.connect("clicked", self.on_recognize_clicked)
-        header_bar.pack_end(recognize_btn)
-
         # --- FLAP (SIDEBAR LAYOUT) ---
         self.flap = Adw.Flap()
         self.flap.set_property("reveal-flap", True)
@@ -145,8 +140,15 @@ class MainWindow(Adw.ApplicationWindow):
         self.art_picture.set_vexpand(True)
         self.art_picture.set_filename("invalid-path")
 
+        # Wrap in a button for interaction
+        self.art_btn = Gtk.Button()
+        self.art_btn.add_css_class("flat")
+        self.art_btn.set_child(self.art_picture)
+        self.art_btn.set_tooltip_text("Click to Identify Song")
+        self.art_btn.connect("clicked", self.on_recognize_clicked)
+
         art_frame = Gtk.Frame()
-        art_frame.set_child(self.art_picture)
+        art_frame.set_child(self.art_btn)
         art_frame.set_hexpand(True)
         art_frame.set_vexpand(True)
 
@@ -354,6 +356,9 @@ class MainWindow(Adw.ApplicationWindow):
             return
 
         self._show_toast("Listening (approx. 10s)...")
+        # Visual feedback
+        self.track_label.set_label("Scanning...")
+        
         url = self.current_station_data.get('url_resolved') or self.current_station_data.get('url')
         threading.Thread(target=self._perform_recognition, args=(url,), daemon=True).start()
 
@@ -364,24 +369,39 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_recognition_complete(self, result):
         if not result:
             self._show_toast("Could not identify song.")
+            # Restore unknown state or previous
+            if self.current_station_data:
+                 self.track_label.set_label(self.current_station_data.get('name', 'Unknown'))
             return
 
         if "error" in result:
              self._show_toast(result["error"])
+             if self.current_station_data:
+                 self.track_label.set_label(self.current_station_data.get('name', 'Unknown'))
              return
 
         title = result.get('title', 'Unknown')
         artist = result.get('artist', 'Unknown')
+        art_url = result.get('art_url')
         
         # Escape ampersands and other special characters for Pango markup
         import html
-        title = html.escape(title)
-        artist = html.escape(artist)
+        safe_title = html.escape(title)
+        safe_artist = html.escape(artist)
         
-        self._show_toast(f"Found: {artist} - {title}")
+        self._show_toast(f"Found: {safe_artist} - {safe_title}")
         
-        # Optional: Update UI immediately if user wants, but Toast is safer for now.
-        # We could also copy to clipboard here.
+        # Update Player UI
+        self.track_label.set_label(title) # Label handles plain text automatically usually, or use markup
+        self.station_label.set_label(artist) # We use station label for Artist now
+        
+        # Update Status Bar to show Station Name so we don't lose it
+        if self.current_station_data:
+            station_name = self.current_station_data.get('name')
+            self.status_label.set_label(station_name)
+        
+        if art_url:
+            load_image_into(art_url, self.art_picture, self._loaded_textures)
 
     def _show_toast(self, message):
         toast = Adw.Toast.new(message)
