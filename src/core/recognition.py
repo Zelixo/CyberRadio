@@ -1,25 +1,15 @@
-import asyncio
 import os
 import tempfile
 import logging
 import subprocess
-from shazamio import Shazam
+import json
+import sys
 
 logger = logging.getLogger(__name__)
 
 class SongRecognizer:
     def __init__(self):
         pass
-
-    async def _recognize_async(self, file_path):
-        try:
-            # Instantiate here to ensure it uses the current thread's event loop
-            shazam = Shazam()
-            out = await shazam.recognize(file_path)
-            return out
-        except Exception as e:
-            logger.error(f"Shazam recognition failed: {e}")
-            return None
 
     def identify(self, stream_url, duration=10):
         """
@@ -28,8 +18,7 @@ class SongRecognizer:
         """
         temp_file = None
         try:
-            # 1. Create a temporary file for the audio snippet
-            # We use .mp3 suffix to help ffmpeg/shazam guess format if needed, though ffmpeg handles it.
+            # 1. Create a temporary file
             fd, temp_path = tempfile.mkstemp(suffix=".mp3")
             os.close(fd)
             temp_file = temp_path
@@ -37,12 +26,6 @@ class SongRecognizer:
             logger.info(f"Capturing {duration}s of audio from {stream_url} to {temp_file}...")
 
             # 2. Capture audio using ffmpeg
-            # -y: overwrite output
-            # -t: duration
-            # -i: input url
-            # -vn: no video
-            # -acodec: copy (copy stream directly if possible) or libmp3lame
-            # We'll re-encode to ensure a clean chunk for shazam
             cmd = [
                 "ffmpeg",
                 "-y",
@@ -52,19 +35,29 @@ class SongRecognizer:
                 "-f", "mp3",
                 temp_file
             ]
-
-            # Run ffmpeg (blocking, but this entire identify method will run in a thread)
-            # Suppress output unless error
+            
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
-            logger.info("FFmpeg capture complete. Starting recognition...")
+            logger.info("FFmpeg capture complete. Calling wrapper...")
 
-            # 3. Recognize using ShazamIO
-            # Use asyncio.run() which manages a fresh event loop for this thread safely
-            result = asyncio.run(self._recognize_async(temp_file))
+            # 3. Call wrapper script
+            wrapper_path = os.path.join(os.path.dirname(__file__), "shazam_wrapper.py")
+            
+            # Run wrapper in a separate process to isolate crashes
+            # We use sys.executable to ensure we use the same python interpreter
+            res = subprocess.run(
+                [sys.executable, wrapper_path, temp_file],
+                capture_output=True,
+                text=True
+            )
 
-            logger.info("Recognition finished.")
+            if res.returncode != 0:
+                logger.error(f"Shazam wrapper failed (code {res.returncode}): {res.stderr}")
+                return None
 
-            if not result:
+            try:
+                result = json.loads(res.stdout)
+            except json.JSONDecodeError:
+                logger.error(f"Failed to parse wrapper output: {res.stdout}")
                 return None
 
             # 4. Parse Result
@@ -86,9 +79,8 @@ class SongRecognizer:
             logger.error(f"Identification error: {e}")
             return None
         finally:
-            # Cleanup
             if temp_file and os.path.exists(temp_file):
                 try:
                     os.remove(temp_file)
                 except Exception as e:
-                    logger.warning(f"Failed to delete temp file {temp_file}: {e}")
+                    pass
