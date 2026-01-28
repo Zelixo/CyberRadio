@@ -372,6 +372,12 @@ class MainWindow(Adw.ApplicationWindow):
 
         title = result.get('title', 'Unknown')
         artist = result.get('artist', 'Unknown')
+        
+        # Escape ampersands and other special characters for Pango markup
+        import html
+        title = html.escape(title)
+        artist = html.escape(artist)
+        
         self._show_toast(f"Found: {artist} - {title}")
         
         # Optional: Update UI immediately if user wants, but Toast is safer for now.
