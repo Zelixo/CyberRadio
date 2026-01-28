@@ -19,25 +19,29 @@ class SongRecognizer:
         temp_file = None
         try:
             # 1. Create a temporary file
-            fd, temp_path = tempfile.mkstemp(suffix=".mp3")
+            # We use .wav with specific format to minimize processing in the wrapper
+            fd, temp_path = tempfile.mkstemp(suffix=".wav")
             os.close(fd)
             temp_file = temp_path
 
             logger.info(f"Capturing {duration}s of audio from {stream_url} to {temp_file}...")
 
             # 2. Capture audio using ffmpeg
+            # Convert directly to Shazam-friendly format: 16kHz, Mono, PCM s16le
             cmd = [
                 "ffmpeg",
                 "-y",
                 "-t", str(duration),
                 "-i", stream_url,
                 "-vn",
-                "-f", "mp3",
+                "-ac", "1",        # Mono
+                "-ar", "16000",    # 16kHz
+                "-f", "wav",
                 temp_file
             ]
             
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
-            logger.info("FFmpeg capture complete. Calling wrapper...")
+            logger.info("FFmpeg capture complete (WAV 16k Mono). Calling wrapper...")
 
             # 3. Call wrapper script
             wrapper_path = os.path.join(os.path.dirname(__file__), "shazam_wrapper.py")
