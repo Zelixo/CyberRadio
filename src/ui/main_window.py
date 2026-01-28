@@ -366,6 +366,10 @@ class MainWindow(Adw.ApplicationWindow):
             self._show_toast("Could not identify song.")
             return
 
+        if "error" in result:
+             self._show_toast(result["error"])
+             return
+
         title = result.get('title', 'Unknown')
         artist = result.get('artist', 'Unknown')
         self._show_toast(f"Found: {artist} - {title}")

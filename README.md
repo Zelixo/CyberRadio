@@ -16,10 +16,14 @@ The installer script currently supports automatic dependency installation for:
 *   Fedora
 
 **Note on Song Identification:**
-To use the "Identify Song" feature, you must install the `shazamio` library manually (as it is not typically in system repositories):
+This feature uses the `songrec` CLI tool (a native Rust client for Shazam), which is more stable than Python bindings.
+Please install it via your package manager:
 ```bash
-pip install shazamio --break-system-packages
-# OR use a virtual environment
+# Arch Linux
+sudo pacman -S songrec
+
+# Ubuntu/Debian (requires cargo)
+cargo install songrec
 ```
 
 ## Installation
