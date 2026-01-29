@@ -1,5 +1,9 @@
+window.background {
+    background-color: transparent;
+}
+
 .cyber-window {
-    background-color: #050510;
+    background-color: rgba(5, 5, 16, 0.85); /* Semi-transparent dark blue */
     color: #e0e0ff;
 }
 

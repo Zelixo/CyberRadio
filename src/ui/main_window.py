@@ -11,8 +11,9 @@ from src.core.metadata import fetch_album_art
 from src.core.musicbrainz import get_musicbrainz_url
 from src.core.recognition import SongRecognizer
 from src.ui.visuals import VectorCat
+from src.core.ipc import IPCHandler
 from src.ui.dialogs import AddStationDialog, IdentifiedSongsDialog
-from src.ui.utils import load_image_into, clean_metadata_title
+from src.ui.utils import load_image_into, clean_metadata_title, update_now_playing_file
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +224,9 @@ class MainWindow(Adw.ApplicationWindow):
         self._populate_list(self.favorites)
         self.player = AudioPlayer(self.on_mpv_metadata, self.on_mpv_discontinuity)
         self.player.set_volume(50)
+
+        self.ipc_handler = IPCHandler(self)
+        self.ipc_handler.create_socket()
 
         GLib.timeout_add_seconds(5, self._poll_tick)
         GLib.timeout_add(30, self._update_visualizer_loop)
@@ -463,6 +467,7 @@ class MainWindow(Adw.ApplicationWindow):
         if not self.is_azuracast:
             cleaned_name = clean_metadata_title(track_name)
             self.track_label.set_label(cleaned_name)
+            update_now_playing_file(cleaned_name)
             # Trigger dynamic art lookup
             threading.Thread(target=self._update_dynamic_art, args=(cleaned_name,), daemon=True).start()
 
@@ -600,10 +605,47 @@ class MainWindow(Adw.ApplicationWindow):
                 GLib.idle_add(self.apply_azuracast_update, song_text, art_url, url)
                 return
 
+    def handle_ipc_command(self, command):
+        if command == "play-pause":
+            self.toggle_play()
+        elif command == "next-station":
+            self._play_next_station()
+        elif command == "prev-station":
+            self._play_prev_station()
+
+    def _play_next_station(self):
+        if not self.current_station_data:
+            return
+        
+        current_url = self.current_station_data.get('url_resolved')
+        try:
+            current_index = [s.get('url_resolved') for s in self.favorites].index(current_url)
+            next_index = (current_index + 1) % len(self.favorites)
+            self._play_station(self.favorites[next_index])
+        except ValueError:
+            # Current station not in favorites, play the first one
+            if self.favorites:
+                self._play_station(self.favorites[0])
+
+    def _play_prev_station(self):
+        if not self.current_station_data:
+            return
+
+        current_url = self.current_station_data.get('url_resolved')
+        try:
+            current_index = [s.get('url_resolved') for s in self.favorites].index(current_url)
+            prev_index = (current_index - 1 + len(self.favorites)) % len(self.favorites)
+            self._play_station(self.favorites[prev_index])
+        except ValueError:
+            # Current station not in favorites, play the first one
+            if self.favorites:
+                self._play_station(self.favorites[0])
+
     def apply_azuracast_update(self, song_text, art_url, stream_url):
         logger.debug(f"[apply_azuracast_update] Received text='{song_text}', art='{art_url}' for stream='{stream_url}'")
         if song_text:
              self.track_label.set_label(song_text)
+             update_now_playing_file(song_text)
         if self.current_station_data and self.current_station_data.get('url_resolved') == stream_url:
             target_art = art_url
             if not target_art:

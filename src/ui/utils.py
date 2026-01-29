@@ -95,3 +95,15 @@ def _set_texture(widget, texture):
         widget.set_paintable(texture)
     elif isinstance(widget, Gtk.Image):
         widget.set_from_paintable(texture)
+
+def update_now_playing_file(text):
+    """Writes the now playing text to a file for external consumption (e.g., Waybar)."""
+    try:
+        config_dir = os.path.expanduser("~/.config/CyberRadio")
+        os.makedirs(config_dir, exist_ok=True)
+        file_path = os.path.join(config_dir, "now_playing.txt")
+        
+        with open(file_path, "w") as f:
+            f.write(text)
+    except Exception as e:
+        logger.error(f"Failed to write now playing file: {e}")
