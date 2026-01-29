@@ -54,9 +54,18 @@ def load_image_into(url, widget, loaded_textures_cache, size=None):
                 return
 
             # Handle remote URLs
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; CyberRadio/1.0)'})
             with urllib.request.urlopen(req, timeout=5) as resp:
-                data = resp.read()
+                # Get the final URL after all redirects
+                final_url = resp.geturl()
+                # Make a new request to the final URL to get the actual image data
+                # This is necessary because GdkPixbuf.PixbufLoader might not handle redirects transparently
+                if final_url != url:
+                    req = urllib.request.Request(final_url, headers={'User-Agent': 'Mozilla/5.0 (compatible; CyberRadio/1.0)'})
+                    with urllib.request.urlopen(req, timeout=5) as final_resp:
+                        data = final_resp.read()
+                else:
+                    data = resp.read()
 
             loader = GdkPixbuf.PixbufLoader()
             loader.write(data)

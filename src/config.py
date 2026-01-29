@@ -22,31 +22,41 @@ DEFAULT_STATIONS = [
         "name": "Nostalgia OST",
         "url_resolved": "https://radio.zelixo.net/listen/nostalgia_ost/stream",
         "countrycode": "OST",
-        "favicon": "https://radio.zelixo.net/static/uploads/nostalgia_ost/album_art.1737523202.png"
+        "favicon": "https://radio.zelixo.net/static/uploads/nostalgia_ost/album_art.1737523202.png",
+        "id": 1,
+        "shortcode": "nostalgia_ost"
     },
     {
         "name": "Night City Radio",
         "url_resolved": "https://radio.zelixo.net/listen/night_city_radio/ncradio",
         "countrycode": "NC",
-        "favicon": "https://radio.zelixo.net/static/uploads/night_city_radio/album_art.1759461316.png"
+        "favicon": "https://radio.zelixo.net/static/uploads/night_city_radio/album_art.1759461316.png",
+        "id": 3,
+        "shortcode": "night_city_radio"
     },
     {
         "name": "Japan EDM",
         "url_resolved": "https://radio.zelixo.net/listen/japedm/radio.flac",
         "countrycode": "JP",
-        "favicon": "https://radio.zelixo.net/static/uploads/japedm/album_art.1744086733.jpg"
+        "favicon": "https://radio.zelixo.net/static/uploads/japedm/album_art.1744086733.jpg",
+        "id": 6,
+        "shortcode": "japedm"
     },
     {
         "name": "DJ Zel Radio",
         "url_resolved": "https://radio.zelixo.net/listen/dj_zel/radio.mp3",
         "countrycode": "ZL",
-        "favicon": "https://radio.zelixo.net/static/uploads/dj_zel/album_art.1737590207.png"
+        "favicon": "https://radio.zelixo.net/static/uploads/dj_zel/album_art.1737590207.png",
+        "id": 2,
+        "shortcode": "dj_zel"
     },
     {
         "name": "ACNH Radio",
         "url_resolved": "https://radio.zelixo.net/listen/acnh_radio/radio.mp3",
         "countrycode": "AC",
-        "favicon": "https://radio.zelixo.net/static/uploads/acnh_radio/album_art.1757640781.jpg"
+        "favicon": "https://radio.zelixo.net/static/uploads/acnh_radio/album_art.1757640781.jpg",
+        "id": 4,
+        "shortcode": "acnh_radio"
     },
     {
         "name": "Lofi Girl",

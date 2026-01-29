@@ -232,8 +232,15 @@ class MainWindow(Adw.ApplicationWindow):
             url = fav.get('url_resolved')
             if url in defaults_map:
                 default_data = defaults_map[url]
+                # Update existing fields from default data
                 if 'favicon' not in fav or fav['favicon'] != default_data.get('favicon'):
                     fav['favicon'] = default_data.get('favicon')
+                    updated = True
+                if 'id' not in fav and 'id' in default_data:
+                    fav['id'] = default_data['id']
+                    updated = True
+                if 'shortcode' not in fav and 'shortcode' in default_data:
+                    fav['shortcode'] = default_data['shortcode']
                     updated = True
 
         existing_urls = {f.get('url_resolved') for f in self.favorites}
@@ -535,7 +542,27 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _fetch_azuracast(self, url):
         data = fetch_azuracast_nowplaying()
+        station_id = self.current_station_data.get('id')
+        if not station_id:
+            logger.warning(f"No Azuracast ID found for current station: {self.current_station_data.get('name')}")
+            return
+
         for s in data:
-            if s.get('station', {}).get('shortcode') in url:
-                np = s.get('now_playing', {}).get('song', {})
-                GLib.idle_add(self.apply_azuracast_update, np.get('text'), np.get('art'), url)
+            if s.get('station', {}).get('id') == station_id:
+                np_song = s.get('now_playing', {}).get('song', {})
+                song_text = np_song.get('text')
+                art_url = np_song.get('art')
+                logger.debug(f"[_fetch_azuracast] Calling apply_azuracast_update with text='{song_text}', art='{art_url}'")
+                GLib.idle_add(self.apply_azuracast_update, song_text, art_url, url)
+                return
+
+    def apply_azuracast_update(self, song_text, art_url, stream_url):
+        logger.debug(f"[apply_azuracast_update] Received text='{song_text}', art='{art_url}' for stream='{stream_url}'")
+        if song_text:
+             self.track_label.set_label(song_text)
+        if self.current_station_data and self.current_station_data.get('url_resolved') == stream_url:
+            target_art = art_url
+            if not target_art:
+                target_art = self.current_station_data.get('favicon')
+            logger.debug(f"[apply_azuracast_update] Loading album art from '{target_art}'")
+            load_image_into(target_art, self.art_picture, self._loaded_textures)
