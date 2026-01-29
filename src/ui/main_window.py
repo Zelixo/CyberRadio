@@ -8,9 +8,10 @@ from src.config import FAVORITES_FILE, DEFAULT_STATIONS
 from src.core.player import AudioPlayer
 from src.core.api import search_stations, fetch_azuracast_nowplaying
 from src.core.metadata import fetch_album_art
+from src.core.musicbrainz import get_musicbrainz_url
 from src.core.recognition import SongRecognizer
 from src.ui.visuals import VectorCat
-from src.ui.dialogs import AddStationDialog
+from src.ui.dialogs import AddStationDialog, IdentifiedSongsDialog
 from src.ui.utils import load_image_into, clean_metadata_title
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._discontinuity_timer = None
         self._loaded_textures = {}
         self.recognizer = SongRecognizer()
+        self.identified_songs = []
 
         # --- TOAST OVERLAY & ROOT BOX ---
         self.toast_overlay = Adw.ToastOverlay()
@@ -52,6 +54,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.status_label = Gtk.Label(label="Ready")
         self.status_label.add_css_class("dim-label")
         header_bar.set_title_widget(self.status_label)
+        
+        # Identified Songs Button
+        identified_btn = Gtk.Button(icon_name="music-note-symbolic")
+        identified_btn.set_tooltip_text("Show Identified Songs")
+        identified_btn.connect("clicked", self.on_show_identified_songs)
+        header_bar.pack_end(identified_btn)
 
         # --- FLAP (SIDEBAR LAYOUT) ---
         self.flap = Adw.Flap()
@@ -378,40 +386,76 @@ class MainWindow(Adw.ApplicationWindow):
             self._show_toast("Could not identify song.")
             # Restore unknown state or previous
             if self.current_station_data:
-                 self.track_label.set_label(self.current_station_data.get('name', 'Unknown'))
+                 self.track_label.set_text(self.current_station_data.get('name', 'Unknown'))
             return
 
         if "error" in result:
              self._show_toast(result["error"])
              if self.current_station_data:
-                 self.track_label.set_label(self.current_station_data.get('name', 'Unknown'))
+                 self.track_label.set_text(self.current_station_data.get('name', 'Unknown'))
              return
 
         title = result.get('title', 'Unknown')
         artist = result.get('artist', 'Unknown')
         art_url = result.get('art_url')
-        
-        # Escape ampersands and other special characters for Pango markup
-        import html
-        safe_title = html.escape(title)
-        safe_artist = html.escape(artist)
-        
-        self._show_toast(f"Found: {safe_artist} - {safe_title}")
-        
+
+        self._show_toast(f"Found: {artist} - {title}")
+
+        # Get MusicBrainz URL in a separate thread to not block the UI
+        threading.Thread(target=self._add_identified_song, args=(title, artist, art_url), daemon=True).start()
+
+        # --- Temporary UI Update ---
+        # Store original state
+        self.original_track_label = self.track_label.get_text()
+        self.original_art_paintable = self.art_picture.get_paintable()
+        self.original_station_label = self.station_label.get_text()
+
         # Update Player UI
-        self.track_label.set_label(title) # Label handles plain text automatically usually, or use markup
-        self.station_label.set_label(artist) # We use station label for Artist now
-        
-        # Update Status Bar to show Station Name so we don't lose it
-        if self.current_station_data:
-            station_name = self.current_station_data.get('name')
-            self.status_label.set_label(station_name)
-        
+        self.track_label.set_text(title) 
+        self.station_label.set_text(artist)
         if art_url:
             load_image_into(art_url, self.art_picture, self._loaded_textures)
 
+
+        # Schedule the UI to revert back after 10 seconds
+        GLib.timeout_add_seconds(10, self._revert_recognition_display)
+
+    def _revert_recognition_display(self):
+        """Restores the UI to its state before the song recognition."""
+        if hasattr(self, 'original_track_label'):
+            self.track_label.set_text(self.original_track_label)
+        if hasattr(self, 'original_station_label'):
+            self.station_label.set_text(self.original_station_label)
+        if hasattr(self, 'original_art_paintable'):
+            self.art_picture.set_paintable(self.original_art_paintable)
+        return False # Important: return False to stop the timer from repeating
+
+
+
+    def _add_identified_song(self, title, artist, art_url):
+        musicbrainz_url = get_musicbrainz_url(artist, title)
+        
+        song_data = {
+            "title": title,
+            "artist": artist,
+            "art_url": art_url,
+            "musicbrainz_url": musicbrainz_url
+        }
+        
+        self.identified_songs.append(song_data)
+        
+        # Also show a toast that the song has been identified and added
+        GLib.idle_add(self._show_toast, f"Identified & Added: {artist} - {title}")
+
+
+
+    def on_show_identified_songs(self, btn):
+        dialog = IdentifiedSongsDialog(self, self.identified_songs)
+        dialog.present()
+
     def _show_toast(self, message):
-        toast = Adw.Toast.new(message)
+        safe_message = GLib.markup_escape_text(message)
+        toast = Adw.Toast.new(safe_message)
         toast.set_timeout(4)
         self.toast_overlay.add_toast(toast)
 

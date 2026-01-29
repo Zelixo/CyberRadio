@@ -26,7 +26,7 @@ else
 fi
 
 install_arch() {
-    DEPENDENCIES=("python-gobject" "gtk4" "libadwaita" "mpv" "python-mpv" "yt-dlp")
+    DEPENDENCIES=("python-gobject" "gtk4" "libadwaita" "mpv" "python-mpv" "yt-dlp" "python-musicbrainzngs")
     MISSING_PKGS=()
     for pkg in "${DEPENDENCIES[@]}"; do
         if ! pacman -Qi "$pkg" &> /dev/null; then
@@ -41,7 +41,7 @@ install_arch() {
 }
 
 install_debian() {
-    DEPENDENCIES=("python3-gi" "libgtk-4-1" "libadwaita-1-0" "mpv" "python3-mpv" "yt-dlp")
+    DEPENDENCIES=("python3-gi" "libgtk-4-1" "libadwaita-1-0" "mpv" "python3-mpv" "yt-dlp" "python3-musicbrainzngs")
     echo ":: Updating apt cache..."
     sudo apt update
     echo ":: Installing dependencies..."
@@ -49,7 +49,7 @@ install_debian() {
 }
 
 install_fedora() {
-    DEPENDENCIES=("python3-gobject" "gtk4" "libadwaita" "mpv" "python3-mpv" "yt-dlp")
+    DEPENDENCIES=("python3-gobject" "gtk4" "libadwaita" "mpv" "python3-mpv" "yt-dlp" "python3-musicbrainzngs")
     echo ":: Installing dependencies..."
     sudo dnf install -y "${DEPENDENCIES[@]}"
 }

@@ -1,6 +1,57 @@
 import os
 import shutil
+import webbrowser
 from gi.repository import Gtk, Adw, Gio, GObject
+
+class IdentifiedSongsDialog(Adw.Window):
+    def __init__(self, parent_window, identified_songs):
+        super().__init__(modal=True, transient_for=parent_window)
+        self.set_title("Identified Songs")
+        self.set_default_size(500, 400)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+        box.set_margin_start(20)
+        box.set_margin_end(20)
+        self.set_content(box)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_vexpand(True)
+        box.append(scrolled)
+
+        self.list_box = Gtk.ListBox()
+        self.list_box.add_css_class("boxed-list")
+        scrolled.set_child(self.list_box)
+
+        if not identified_songs:
+            label = Gtk.Label(label="No songs identified yet.")
+            label.add_css_class("dim-label")
+            label.set_halign(Gtk.Align.CENTER)
+            label.set_valign(Gtk.Align.CENTER)
+            self.list_box.append(label)
+        else:
+            for song in identified_songs:
+                row = self._create_song_row(song)
+                self.list_box.append(row)
+
+        close_btn = Gtk.Button(label="Close")
+        close_btn.connect("clicked", lambda x: self.close())
+        close_btn.set_halign(Gtk.Align.CENTER)
+        close_btn.add_css_class("pill")
+        box.append(close_btn)
+
+    def _create_song_row(self, song):
+        row = Adw.ActionRow(title=song.get('title', 'Unknown'), subtitle=song.get('artist', 'Unknown'))
+        
+        if song.get('musicbrainz_url'):
+            btn = Gtk.Button(icon_name="info-symbolic")
+            btn.set_tooltip_text("Open in MusicBrainz")
+            btn.add_css_class("flat")
+            btn.connect("clicked", lambda b, url=song.get('musicbrainz_url'): webbrowser.open_new_tab(url))
+            row.add_suffix(btn)
+        
+        return row
 
 class AddStationDialog(Adw.Window):
     def __init__(self, parent_window, on_save_callback, station_data=None):
