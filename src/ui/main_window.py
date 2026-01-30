@@ -22,8 +22,8 @@ class MainWindow(Adw.ApplicationWindow):
         super().__init__(*args, **kwargs)
 
         self.set_title("Cyber Radio")
-        self.set_default_size(700, 500)
-        self.set_size_request(650, 550)
+        self.set_default_size(750, 450) # Wider, shorter
+        self.set_size_request(700, 400)
         self.add_css_class("cyber-window")
 
         # State
@@ -36,75 +36,43 @@ class MainWindow(Adw.ApplicationWindow):
         self.recognizer = SongRecognizer()
         self.identified_songs = []
 
-        # --- TOAST OVERLAY & ROOT BOX ---
+        # --- TOAST OVERLAY ---
         self.toast_overlay = Adw.ToastOverlay()
         self.set_content(self.toast_overlay)
 
-        root_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.toast_overlay.set_child(root_box)
+        # --- MAIN SPLIT LAYOUT ---
+        # A single horizontal box split into Sidebar (Left) and Player (Right)
+        main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        self.toast_overlay.set_child(main_box)
 
-        # --- HEADER BAR ---
-        header_bar = Adw.HeaderBar()
-        root_box.append(header_bar)
+        # ==========================
+        # 1. SIDEBAR (Left Panel)
+        # ==========================
+        self.sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.sidebar.add_css_class("sidebar-box")
+        self.sidebar.set_size_request(240, -1)
+        self.sidebar.set_hexpand(False)
+        main_box.append(self.sidebar)
 
-        toggle_btn = Gtk.Button(icon_name="sidebar-show-symbolic")
-        toggle_btn.set_tooltip_text("Toggle Sidebar")
-        toggle_btn.connect("clicked", self.on_toggle_sidebar)
-        header_bar.pack_start(toggle_btn)
-
-        self.status_label = Gtk.Label(label="Ready")
-        self.status_label.add_css_class("dim-label")
-        header_bar.set_title_widget(self.status_label)
+        # Sidebar Header: Search + Add
+        sb_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
         
-        # Identified Songs Button
-        identified_btn = Gtk.Button(icon_name="music-note-symbolic")
-        identified_btn.set_tooltip_text("Show Identified Songs")
-        identified_btn.connect("clicked", self.on_show_identified_songs)
-        header_bar.pack_end(identified_btn)
-
-        # --- FLAP (SIDEBAR LAYOUT) ---
-        self.flap = Adw.Flap()
-        self.flap.set_property("reveal-flap", True)
-        self.flap.set_property("fold-policy", Adw.FlapFoldPolicy.NEVER)
-        root_box.append(self.flap)
-
-        # ==========================
-        # 1. SIDEBAR (The List)
-        # ==========================
-        sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        sidebar_box.add_css_class("sidebar-box")
-
-        # Narrower Sidebar and Locked Width
-        sidebar_box.set_size_request(220, -1)
-        sidebar_box.set_hexpand(False)
-
-        # Controls (Add)
-        sidebar_ctrls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-        sidebar_ctrls.set_margin_start(10)
-        sidebar_ctrls.set_margin_end(10)
-
-        lbl = Gtk.Label(label="LIBRARY")
-        lbl.add_css_class("dim-label")
-        lbl.set_hexpand(True)
-        lbl.set_halign(Gtk.Align.START)
-        sidebar_ctrls.append(lbl)
-
-        add_btn = Gtk.Button(icon_name="list-add-symbolic")
-        add_btn.set_tooltip_text("Add Custom Station")
-        add_btn.connect("clicked", self.on_add_custom_clicked)
-        add_btn.add_css_class("flat")
-        sidebar_ctrls.append(add_btn)
-
-        sidebar_box.append(sidebar_ctrls)
-
-        # Search
         self.search_entry = Gtk.SearchEntry()
         self.search_entry.set_placeholder_text("Search...")
+        self.search_entry.set_hexpand(True)
         self.search_entry.connect("activate", self.on_search_activate)
         self.search_entry.connect("search-changed", self.on_search_changed)
-        sidebar_box.append(self.search_entry)
+        sb_header.append(self.search_entry)
 
-        # List
+        add_btn = Gtk.Button(label="") # F067
+        add_btn.add_css_class("flat")
+        add_btn.set_tooltip_text("Add Custom Station")
+        add_btn.connect("clicked", self.on_add_custom_clicked)
+        sb_header.append(add_btn)
+
+        self.sidebar.append(sb_header)
+
+        # Station List
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_vexpand(True)
         self.list_box = Gtk.ListBox()
@@ -114,104 +82,114 @@ class MainWindow(Adw.ApplicationWindow):
         self.list_box.connect("row-activated", self.on_station_selected)
 
         scrolled.set_child(self.list_box)
-        sidebar_box.append(scrolled)
-
-        self.flap.set_flap(sidebar_box)
+        self.sidebar.append(scrolled)
 
         # ==========================
-        # 2. CONTENT (The Player)
+        # 2. PLAYER (Right Panel)
         # ==========================
-        main_scroll = Gtk.ScrolledWindow()
-        main_scroll.set_vexpand(True)
-        main_scroll.set_hexpand(True)
+        self.player_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.player_box.add_css_class("player-container")
+        self.player_box.set_hexpand(True)
+        main_box.append(self.player_box)
 
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.add_css_class("player-container")
-        content_box.set_valign(Gtk.Align.CENTER)
-        content_box.set_halign(Gtk.Align.FILL)
+        # --- Top Bar (Status) ---
+        top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        top_bar.set_margin_bottom(10)
+        
+        self.status_label = Gtk.Label(label="Ready")
+        self.status_label.add_css_class("dim-label")
+        self.status_label.set_hexpand(True)
+        self.status_label.set_halign(Gtk.Align.START)
+        top_bar.append(self.status_label)
 
-        # --- Album Art Area ---
-        art_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        art_box.set_halign(Gtk.Align.CENTER)
-        art_box.set_size_request(250, 250)
-        art_box.set_margin_bottom(20)
+        rec_btn = Gtk.Button(label="") # F0C2 (Cloud/Identified)
+        rec_btn.add_css_class("flat")
+        rec_btn.set_tooltip_text("Show Identified Songs")
+        rec_btn.connect("clicked", self.on_show_identified_songs)
+        top_bar.append(rec_btn)
 
+        self.player_box.append(top_bar)
+
+        # --- Visuals (Vector Cat) ---
+        self.vector_cat = VectorCat()
+        self.vector_cat.set_content_height(120) # Compact height
+        self.vector_cat.set_vexpand(True) # Take available space but don't force scroll
+        self.player_box.append(self.vector_cat)
+
+        # --- Track Info & Art (Horizontal Layout) ---
+        info_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=15)
+        info_row.set_margin_top(10)
+        info_row.set_margin_bottom(15)
+        info_row.set_halign(Gtk.Align.FILL)
+
+        # Art (Thumbnail)
         self.art_picture = Gtk.Picture()
         self.art_picture.set_content_fit(Gtk.ContentFit.COVER)
-        self.art_picture.set_hexpand(True)
-        self.art_picture.set_vexpand(True)
-        self.art_picture.set_filename("invalid-path")
-
-        # Wrap in a button for interaction
+        self.art_picture.set_size_request(64, 64)
+        
+        # Art Button wrapper
         self.art_btn = Gtk.Button()
         self.art_btn.add_css_class("flat")
         self.art_btn.set_child(self.art_picture)
         self.art_btn.set_tooltip_text("Click to Identify Song")
         self.art_btn.connect("clicked", self.on_recognize_clicked)
-
+        
         art_frame = Gtk.Frame()
+        art_frame.add_css_class("art-frame") # We'll style this to be round/pill
         art_frame.set_child(self.art_btn)
-        art_frame.set_hexpand(True)
-        art_frame.set_vexpand(True)
+        info_row.append(art_frame)
 
-        art_box.append(art_frame)
-        content_box.append(art_box)
-
-        # --- Info Area ---
+        # Text Info
+        text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        text_box.set_valign(Gtk.Align.CENTER)
+        
         self.track_label = Gtk.Label(label="Select Station")
         self.track_label.add_css_class("track-title")
-        self.track_label.set_wrap(True)
-        self.track_label.set_justify(Gtk.Justification.CENTER)
-        self.track_label.set_max_width_chars(30)
-        content_box.append(self.track_label)
+        self.track_label.set_halign(Gtk.Align.START)
+        self.track_label.set_ellipsize(3) # Ellipsize at end
+        self.track_label.set_max_width_chars(25)
+        text_box.append(self.track_label)
 
         self.station_label = Gtk.Label(label="Ready")
         self.station_label.add_css_class("station-name")
-        content_box.append(self.station_label)
+        self.station_label.set_halign(Gtk.Align.START)
+        text_box.append(self.station_label)
 
-        # --- THE VECTOR CAT (Replacing Visualizer) ---
-        self.vector_cat = VectorCat()
-        self.vector_cat.set_margin_top(10)
-        self.vector_cat.set_margin_bottom(20)
-        content_box.append(self.vector_cat)
+        info_row.append(text_box)
+        self.player_box.append(info_row)
 
-        # --- Controls ---
-        btn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        btn_row.set_halign(Gtk.Align.CENTER)
+        # --- Controls (Bottom Row) ---
+        controls_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=15)
+        controls_row.set_halign(Gtk.Align.FILL)
+        controls_row.set_valign(Gtk.Align.END)
 
         # Volume
         vol_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-        vol_icon = Gtk.Image.new_from_icon_name("audio-volume-medium-symbolic")
+        vol_label = Gtk.Label(label="") # F028
         self.vol_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
         self.vol_scale.set_value(50)
         self.vol_scale.set_hexpand(True)
-        self.vol_scale.set_size_request(100, -1)
         self.vol_scale.connect("value-changed", self.on_volume_changed)
-        vol_box.append(vol_icon)
+        vol_box.append(vol_label)
         vol_box.append(self.vol_scale)
+        vol_box.set_hexpand(True) # Fill left space
+        controls_row.append(vol_box)
 
-        # Play
-        self.play_btn = Gtk.Button(icon_name="media-playback-start-symbolic")
+        # Play/Pause (Center-ish)
+        self.play_btn = Gtk.Button(label="") # F04B
         self.play_btn.add_css_class("suggested-action")
-        self.play_btn.add_css_class("circular")
-        self.play_btn.set_size_request(64, 64)
+        self.play_btn.set_size_request(50, 50)
         self.play_btn.set_action_name("app.toggle_play")
+        controls_row.append(self.play_btn)
 
-        # Fav
-        self.fav_btn_player = Gtk.Button(icon_name="non-starred-symbolic")
-        self.fav_btn_player.add_css_class("circular")
-        self.fav_btn_player.set_size_request(40, 40)
+        # Favorite (Right)
+        self.fav_btn_player = Gtk.Button(label="") # F006 (Non-star)
+        self.fav_btn_player.add_css_class("flat") # Make it subtle
         self.fav_btn_player.set_tooltip_text("Toggle Favorite")
         self.fav_btn_player.connect("clicked", self.on_favorite_clicked)
+        controls_row.append(self.fav_btn_player)
 
-        btn_row.append(vol_box)
-        btn_row.append(self.play_btn)
-        btn_row.append(self.fav_btn_player)
-
-        content_box.append(btn_row)
-
-        main_scroll.set_child(content_box)
-        self.flap.set_content(main_scroll)
+        self.player_box.append(controls_row)
 
         # --- INIT ---
         self._populate_list(self.favorites)
@@ -259,10 +237,6 @@ class MainWindow(Adw.ApplicationWindow):
             if hasattr(self, 'list_box'):
                 self._populate_list(self.favorites)
 
-    def on_toggle_sidebar(self, btn):
-        current = self.flap.get_reveal_flap()
-        self.flap.set_reveal_flap(not current)
-
     # --- UI UPDATERS ---
     def _update_visualizer_loop(self):
         # Determine cat state
@@ -300,7 +274,7 @@ class MainWindow(Adw.ApplicationWindow):
         load_image_into(favicon, self.art_picture, self._loaded_textures)
 
         self.player.play(url)
-        self.play_btn.set_icon_name("media-playback-pause-symbolic")
+        self.play_btn.set_label("") # Pause F04C
 
         if self.is_azuracast:
              self.track_label.set_label("Loading metadata...")
@@ -336,8 +310,11 @@ class MainWindow(Adw.ApplicationWindow):
             if len(name) > 15:
                 row_content.set_tooltip_text(name)
 
+            # Icon fallback for list rows (can keep Image or use Label)
+            # Keeping Image here as load_image_into expects it
             icon = Gtk.Image()
             icon.set_pixel_size(24)
+            # Placeholder if no favicon
             icon.set_from_icon_name("audio-x-generic-symbolic")
 
             if favicon:
@@ -346,11 +323,11 @@ class MainWindow(Adw.ApplicationWindow):
             row_content.add_prefix(icon)
             row_content.station_data = station
 
-            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+            del_btn = Gtk.Button(label="") # F1F8
             del_btn.add_css_class("flat")
             del_btn.connect("clicked", lambda b, s=station: self.delete_favorite_direct(s))
             
-            edit_btn = Gtk.Button(icon_name="document-edit-symbolic")
+            edit_btn = Gtk.Button(label="") # F044
             edit_btn.add_css_class("flat")
             edit_btn.connect("clicked", lambda b, s=station: self.on_edit_clicked(s))
 
@@ -484,18 +461,18 @@ class MainWindow(Adw.ApplicationWindow):
         exists = any(f.get('url_resolved') == url for f in self.favorites)
         if exists:
             self.favorites = [f for f in self.favorites if f.get('url_resolved') != url]
-            self.fav_btn_player.set_icon_name("non-starred-symbolic")
+            self.fav_btn_player.set_label("") # Non-star F006
         else:
             self.favorites.append(self.current_station_data)
-            self.fav_btn_player.set_icon_name("starred-symbolic")
+            self.fav_btn_player.set_label("") # Star F005
         self.save_favorites()
         if not self.search_entry.get_text():
             self._populate_list(self.favorites)
 
     def check_is_favorite(self, url):
         exists = any(f.get('url_resolved') == url for f in self.favorites)
-        icon = "starred-symbolic" if exists else "non-starred-symbolic"
-        self.fav_btn_player.set_icon_name(icon)
+        icon = "" if exists else "" # F005 vs F006
+        self.fav_btn_player.set_label(icon)
 
     def on_search_activate(self, entry):
         query = entry.get_text()
@@ -563,7 +540,7 @@ class MainWindow(Adw.ApplicationWindow):
             paused = self.player.get_is_paused()
             if paused: self.player.pause()
             else: self.player.pause()
-            self.play_btn.set_icon_name("media-playback-pause-symbolic" if paused else "media-playback-start-symbolic")
+            self.play_btn.set_label("" if paused else "") # F04C (Pause) if playing, F04B (Play) if paused
 
     # Polling logic
     def _poll_tick(self):
