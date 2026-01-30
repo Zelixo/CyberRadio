@@ -78,6 +78,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.flow_box = Gtk.FlowBox()
         self.flow_box.set_valign(Gtk.Align.FILL) # Fill vertical space
         self.flow_box.set_vexpand(True) # Push Nav Box down
+        self.flow_box.set_hexpand(False) # Don't expand horizontally
         self.flow_box.set_min_children_per_line(2)
         self.flow_box.set_max_children_per_line(2)
         self.flow_box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -362,6 +363,8 @@ class MainWindow(Adw.ApplicationWindow):
             lbl.add_css_class("station-label")
             lbl.set_justify(Gtk.Justification.CENTER)
             lbl.set_wrap(True)
+            lbl.set_ellipsize(3) # Pango.EllipsizeMode.END
+            lbl.set_max_width_chars(8) # Force constraint
             card.append(lbl)
 
             # Click Controller
@@ -370,6 +373,8 @@ class MainWindow(Adw.ApplicationWindow):
             gesture.connect("pressed", lambda g, n, x, y, s=station: self._on_grid_item_clicked(g, n, x, y, s))
             card.add_controller(gesture)
             
+            card.set_hexpand(False)
+            card.set_vexpand(False)
             self.flow_box.append(card)
 
         # Fillers to maintain grid shape
