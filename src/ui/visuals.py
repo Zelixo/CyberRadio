@@ -3,7 +3,7 @@ import random
 from gi.repository import Gtk
 
 class VectorCat(Gtk.DrawingArea):
-    """A High-Fidelity Dynamic Long Cat."""
+    """A High-Fidelity Dynamic Long Cat (Kath Edition)."""
     def __init__(self):
         super().__init__()
         # Allow expanding
@@ -22,6 +22,9 @@ class VectorCat(Gtk.DrawingArea):
         self.blink_timer = 0
         self.is_blinking = False
         self.wall_pulse = 0.0
+        
+        # Particles (x, y, age, type)
+        self.particles = []
 
     def update(self, state):
         # Treat paused as idle for animation purposes
@@ -32,29 +35,50 @@ class VectorCat(Gtk.DrawingArea):
         # Wall pulse animation
         self.wall_pulse = (math.sin(self.tick_count * 0.1) + 1) / 2
 
+        # Particle Logic
         if anim_state == "playing":
-            # Fast Bob
-            cycle = (self.tick_count % 8) / 8.0
-            self.head_bob = math.sin(cycle * math.pi * 2) * 1.5
+            if random.random() < 0.05: # Spawn chance
+                p_type = "heart" if random.random() < 0.7 else "note"
+                # Spawn near head
+                self.particles.append([
+                    random.uniform(-20, 20), # x offset relative to head
+                    random.uniform(-10, 0),  # y offset
+                    0,                       # age
+                    p_type
+                ])
 
-            # Fast Tail
-            self.tail_sway = math.sin(self.tick_count * 0.3) * 6
+        # Update particles
+        alive_particles = []
+        for p in self.particles:
+            p[1] -= 0.5 # Float up
+            p[2] += 1   # Age
+            if p[2] < 100: # Max age
+                alive_particles.append(p)
+        self.particles = alive_particles
+
+        if anim_state == "playing":
+            # Bouncier Bob
+            cycle = (self.tick_count % 16) / 16.0
+            self.head_bob = math.sin(cycle * math.pi * 2) * 2.0
+
+            # Smoother Tail
+            self.tail_sway = math.sin(self.tick_count * 0.2) * 8
 
             # Paws Swing (Alternating)
-            self.paw_swing = math.sin(self.tick_count * 0.25) * 3.0
+            self.paw_swing = math.sin(self.tick_count * 0.25) * 4.0
 
             # Happy Eyes
             self.is_blinking = True
 
-            # Normal breathe (relaxed while vibing)
-            self.breathe_scale = math.sin(self.tick_count * 0.05) * 1.0
+            # Excited breathe
+            self.breathe_scale = math.sin(self.tick_count * 0.1) * 1.5
 
         else: # Idle (and Paused)
-            # Slow breathe
-            self.breathe_scale = math.sin(self.tick_count * 0.05) * 1.0
+            # Sleepy breathe
+            self.breathe_scale = math.sin(self.tick_count * 0.04) * 0.8
 
-            # Slow Tail
-            self.tail_sway = math.sin(self.tick_count * 0.05) * 4
+            # Lazy Tail
+            self.tail_sway = math.sin(self.tick_count * 0.05) * 3
 
             # Head steady
             self.head_bob = 0
@@ -64,9 +88,9 @@ class VectorCat(Gtk.DrawingArea):
 
             # Blink
             self.blink_timer += 1
-            if self.blink_timer > 200:
+            if self.blink_timer > 150: # More frequent blinks
                 self.is_blinking = True
-                if self.blink_timer > 205:
+                if self.blink_timer > 158:
                     self.is_blinking = False
                     self.blink_timer = 0
             else:
@@ -80,17 +104,35 @@ class VectorCat(Gtk.DrawingArea):
         cr.set_source_rgba(*color)
         cr.rectangle(x, y, w, h)
         cr.fill()
+    
+    def draw_heart(self, cr, x, y, s, alpha):
+        """Draws a pixel heart."""
+        cr.set_source_rgba(0.96, 0.76, 0.90, alpha) # Pink
+        # shape:
+        # . x . x .
+        # x x x x x
+        # x x x x x
+        # . x x x .
+        # . . x . .
+        size = 2 * s
+        cr.rectangle(x + size, y, size, size)
+        cr.rectangle(x + 3*size, y, size, size)
+        cr.rectangle(x, y + size, 5*size, 2*size)
+        cr.rectangle(x + size, y + 3*size, 3*size, size)
+        cr.rectangle(x + 2*size, y + 4*size, size, size)
+        cr.fill()
 
     def draw_cat(self, area, cr, w, h):
         S = 3 # Scale
 
-        # Colors
-        C_CYAN = (0.0, 0.9, 1.0, 1.0)
-        C_CYAN_DIM = (0.0, 0.6, 0.7, 1.0)
-        C_PINK = (1.0, 0.0, 1.0, 1.0)
-        C_WHITE = (1.0, 1.0, 1.0, 1.0)
-        C_DARK = (0.1, 0.1, 0.15, 1.0)
-        C_BLACK = (0.05, 0.05, 0.1, 1.0)
+        # Kath/Catppuccin Palette
+        C_BLUE = (0.54, 0.70, 0.98, 1.0) # #89b4fa (Blue)
+        C_LAVENDER = (0.70, 0.80, 1.0, 1.0) # #b4befe (Lavender)
+        C_PINK = (0.96, 0.76, 0.90, 1.0) # #f5c2e7 (Pink)
+        C_MAUVE = (0.80, 0.65, 0.97, 1.0) # #cba6f7 (Mauve)
+        C_WHITE = (0.80, 0.84, 0.96, 1.0) # #cdd6f4 (Text) - warm white
+        C_DARK = (0.11, 0.11, 0.18, 1.0) # #1e1e2e (Base)
+        C_BLACK = (0.07, 0.07, 0.11, 1.0) # #11111b (Crust)
 
         cx = w / 2
         cy = h / 2
@@ -99,11 +141,7 @@ class VectorCat(Gtk.DrawingArea):
         wall_y = cy + 10 * S
 
         # --- DYNAMIC BODY CALCULATION ---
-        # Calculate available width minus padding for head(left) and tail(right)
-        # Head takes ~50px, Tail takes ~50px.
-        # We want margin from widget edges.
         margin = 30
-
         max_body_w = max(40 * S, w - (margin * 2) - (50 * S))
 
         # Center body rect
@@ -111,94 +149,82 @@ class VectorCat(Gtk.DrawingArea):
         body_y = wall_y - 12 * S
 
         # --- WALL / LEDGE ---
-        # Spans full width now
-        cr.set_source_rgba(0.0, 0.9, 1.0, 0.2 + (self.wall_pulse * 0.2))
+        cr.set_source_rgba(0.80, 0.65, 0.97, 0.2 + (self.wall_pulse * 0.1)) # Mauve glow
         cr.rectangle(0, wall_y, w, 4*S)
         cr.fill()
 
-        self.draw_px(cr, 0, wall_y, w, 2*S, C_CYAN)
+        self.draw_px(cr, 0, wall_y, w, 2*S, C_MAUVE)
 
-        # Ticks on bar
-        for i in range(0, int(w), int(10*S)):
-            self.draw_px(cr, i, wall_y + 2*S, 1*S, 2*S, C_CYAN_DIM)
+        for i in range(0, int(w), int(12*S)):
+            self.draw_px(cr, i, wall_y + 2*S, 1*S, 2*S, C_PINK)
 
-        # --- TAIL (Behind, Anchored Right) ---
+        # --- TAIL ---
         tail_root_x = body_x + max_body_w - (5 * S)
         tail_root_y = wall_y - 8 * S
 
-        # Procedural pixel tail based on angle
-        for i in range(12):
-            tx = tail_root_x + (i * S * 0.8)
-            # Dangle down
-            ty = tail_root_y + (i * S * 1.5)
-            # Sway physics
-            sway = math.sin(i * 0.5 + self.tick_count * 0.1) * (self.tail_sway/4)
+        for i in range(14): # Longer tail
+            tx = tail_root_x + (i * S * 0.7)
+            ty = tail_root_y + (i * S * 1.3)
+            sway = math.sin(i * 0.4 + self.tick_count * 0.1) * (self.tail_sway/3)
+            self.draw_px(cr, tx + sway, ty, 3*S, 3*S, C_LAVENDER)
 
-            self.draw_px(cr, tx + sway, ty, 3*S, 3*S, C_PINK)
-
-        # --- BODY (Elastic Long) ---
-        # Breathe effect (Chest rises/falls)
+        # --- BODY ---
         chest_lift = self.breathe_scale * S
 
-        # Main Block (Stretched)
-        self.draw_px(cr, body_x, body_y - chest_lift, max_body_w, 12*S + chest_lift, C_CYAN)
-        # Shading bottom
-        self.draw_px(cr, body_x, wall_y - 2*S, max_body_w, 2*S, C_CYAN_DIM)
+        # Main Block
+        self.draw_px(cr, body_x, body_y - chest_lift, max_body_w, 12*S + chest_lift, C_BLUE)
+        # Shading
+        self.draw_px(cr, body_x, wall_y - 2*S, max_body_w, 2*S, C_LAVENDER)
 
-        # White Belly (Stretched)
+        # White Belly
         self.draw_px(cr, body_x + 5*S, body_y - chest_lift + 2*S, max_body_w - 10*S, 6*S, C_WHITE)
 
-        # --- BACK LEGS (Anchored Right) ---
+        # --- BACK LEGS ---
         haunch_x = body_x + max_body_w - (8 * S)
         haunch_y = body_y - chest_lift + 2 * S
-        self.draw_px(cr, haunch_x, haunch_y, 6*S, 8*S, C_CYAN)
+        self.draw_px(cr, haunch_x, haunch_y, 6*S, 8*S, C_BLUE)
         self.draw_px(cr, haunch_x + 1*S, haunch_y + 2*S, 4*S, 4*S, C_WHITE)
 
-        # Back foot resting on wall
         foot_x = haunch_x + 2*S
         foot_y = wall_y - 2*S
         self.draw_px(cr, foot_x, foot_y, 5*S, 3*S, C_WHITE)
-        self.draw_px(cr, foot_x + 3*S, foot_y + 1*S, 2*S, 1*S, C_PINK)
+        self.draw_px(cr, foot_x + 3*S, foot_y + 1*S, 2*S, 1*S, C_PINK) # Pink beans
 
-        # --- FRONT PAWS (Anchored Left, Swinging) ---
-        # Left Paw
+        # --- FRONT PAWS ---
+        # Left
         lp_x = body_x + 5 * S + self.paw_swing * S
         lp_y = wall_y
-        self.draw_px(cr, lp_x, lp_y, 4*S, 6*S, C_WHITE) # Dangle
-        self.draw_px(cr, lp_x + 1*S, lp_y + 4*S, 2*S, 2*S, C_PINK) # Toe beans
+        self.draw_px(cr, lp_x, lp_y, 4*S, 6*S, C_WHITE)
+        self.draw_px(cr, lp_x + 1*S, lp_y + 4*S, 2*S, 2*S, C_PINK)
 
-        # Right Paw
+        # Right
         rp_swing = -self.paw_swing if self.current_state == "playing" else 0
         rp_x = body_x + 15 * S + rp_swing * S
         rp_y = wall_y
-        self.draw_px(cr, rp_x, rp_y, 4*S, 6*S, C_WHITE) # Dangle
-        self.draw_px(cr, rp_x + 1*S, rp_y + 4*S, 2*S, 2*S, C_PINK) # Toe beans
+        self.draw_px(cr, rp_x, rp_y, 4*S, 6*S, C_WHITE)
+        self.draw_px(cr, rp_x + 1*S, rp_y + 4*S, 2*S, 2*S, C_PINK)
 
-        # --- HEAD (Anchored Left) ---
+        # --- HEAD ---
         cr.save()
-        # Head pivot
         head_base_x = body_x - 5 * S
         head_base_y = body_y - 5 * S
-
-        # Apply Head Bob
         cr.translate(0, self.head_bob)
 
-        # Head Shape (Pixel Blob)
-        self.draw_px(cr, head_base_x, head_base_y, 24*S, 18*S, C_CYAN)
+        # Head Shape
+        self.draw_px(cr, head_base_x, head_base_y, 24*S, 18*S, C_BLUE)
 
         # Ears
-        self.draw_px(cr, head_base_x + 2*S, head_base_y - 6*S, 6*S, 6*S, C_CYAN) # L
-        self.draw_px(cr, head_base_x + 4*S, head_base_y - 4*S, 2*S, 4*S, C_PINK) # L Inner
+        self.draw_px(cr, head_base_x + 2*S, head_base_y - 6*S, 6*S, 6*S, C_BLUE)
+        self.draw_px(cr, head_base_x + 4*S, head_base_y - 4*S, 2*S, 4*S, C_PINK)
 
-        self.draw_px(cr, head_base_x + 16*S, head_base_y - 6*S, 6*S, 6*S, C_CYAN) # R
-        self.draw_px(cr, head_base_x + 18*S, head_base_y - 4*S, 2*S, 4*S, C_PINK) # R Inner
+        self.draw_px(cr, head_base_x + 16*S, head_base_y - 6*S, 6*S, 6*S, C_BLUE)
+        self.draw_px(cr, head_base_x + 18*S, head_base_y - 4*S, 2*S, 4*S, C_PINK)
 
-        # Headphones Band
+        # Headphones
         self.draw_px(cr, head_base_x + 4*S, head_base_y - 7*S, 16*S, 3*S, C_DARK)
-        # Cans
         self.draw_px(cr, head_base_x - 2*S, head_base_y + 2*S, 4*S, 10*S, C_DARK)
         self.draw_px(cr, head_base_x - 1*S, head_base_y + 4*S, 1*S, 6*S, C_PINK) # Glow
-        self.draw_px(cr, head_base_x + 22*S, head_base_y + 2*S, 4*S, 10*S, C_DARK) # R
+        self.draw_px(cr, head_base_x + 22*S, head_base_y + 2*S, 4*S, 10*S, C_DARK)
         self.draw_px(cr, head_base_x + 24*S, head_base_y + 4*S, 1*S, 6*S, C_PINK) # Glow
 
         # Face
@@ -206,29 +232,47 @@ class VectorCat(Gtk.DrawingArea):
         eye_x_l = head_base_x + 6*S
         eye_x_r = head_base_x + 16*S
 
-        # Eyes logic
         if self.current_state == "playing" or self.is_blinking:
-             # ^ ^  or - -
-             self.draw_px(cr, eye_x_l, eye_y, 4*S, 1*S, C_BLACK)
+             # ^ ^ style eyes for maximum uwu
+             # Left
+             self.draw_px(cr, eye_x_l, eye_y, 1*S, 1*S, C_BLACK)
              self.draw_px(cr, eye_x_l + 1*S, eye_y - 1*S, 2*S, 1*S, C_BLACK)
+             self.draw_px(cr, eye_x_l + 3*S, eye_y, 1*S, 1*S, C_BLACK)
 
-             self.draw_px(cr, eye_x_r, eye_y, 4*S, 1*S, C_BLACK)
+             # Right
+             self.draw_px(cr, eye_x_r, eye_y, 1*S, 1*S, C_BLACK)
              self.draw_px(cr, eye_x_r + 1*S, eye_y - 1*S, 2*S, 1*S, C_BLACK)
-
-        # Paused is now treated like Idle/Normal
+             self.draw_px(cr, eye_x_r + 3*S, eye_y, 1*S, 1*S, C_BLACK)
         else:
-             # Normal . .
-             self.draw_px(cr, eye_x_l + 1*S, eye_y, 2*S, 2*S, C_BLACK)
-             self.draw_px(cr, eye_x_r + 1*S, eye_y, 2*S, 2*S, C_BLACK)
+             # Rounder eyes
+             self.draw_px(cr, eye_x_l + 1*S, eye_y - 1*S, 2*S, 3*S, C_BLACK)
+             self.draw_px(cr, eye_x_r + 1*S, eye_y - 1*S, 2*S, 3*S, C_BLACK)
 
-        # Cheeks
-        self.draw_px(cr, head_base_x + 4*S, head_base_y + 12*S, 3*S, 2*S, C_PINK)
-        self.draw_px(cr, head_base_x + 17*S, head_base_y + 12*S, 3*S, 2*S, C_PINK)
+        # Blush
+        self.draw_px(cr, head_base_x + 4*S, head_base_y + 11*S, 4*S, 2*S, C_PINK)
+        self.draw_px(cr, head_base_x + 17*S, head_base_y + 11*S, 4*S, 2*S, C_PINK)
 
         # Nose
         self.draw_px(cr, head_base_x + 11*S, head_base_y + 11*S, 2*S, 1*S, C_BLACK)
 
         cr.restore()
+        
+        # --- PARTICLES ---
+        # Draw particles relative to head center (approx)
+        head_center_x = head_base_x + 12*S
+        head_center_y = head_base_y + 6*S
+        
+        for p in self.particles:
+            px = head_center_x + p[0]*S
+            py = head_center_y + p[1]*S
+            alpha = 1.0 - (p[2] / 100.0)
+            if p[3] == "heart":
+                self.draw_heart(cr, px, py, 1*S, alpha)
+            else:
+                # Small note square
+                cr.set_source_rgba(0.80, 0.65, 0.97, alpha) # Mauve
+                cr.rectangle(px, py, 3*S, 3*S)
+                cr.fill()
 
 class SpectrumVisualizer(Gtk.Box):
     """A physics-based spectrum visualizer simulation (Gravity + Beat)."""

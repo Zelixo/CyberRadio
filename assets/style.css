@@ -3,69 +3,92 @@ window.background {
 }
 
 .cyber-window {
-    background-color: rgba(5, 5, 16, 0.85); /* Semi-transparent dark blue */
-    color: #e0e0ff;
+    background-color: rgba(30, 30, 46, 0.90); /* Catppuccin Mocha Base with transparency */
+    color: #cdd6f4; /* Text */
+    border-radius: 16px;
+    border: 2px solid #cba6f7; /* Mauve Border */
 }
 
 /* Sidebar styling */
 .sidebar-box {
-    background-color: #08080c;
-    border-right: 1px solid #1a1a2e;
+    background-color: rgba(24, 24, 37, 0.6); /* Mantle transparent */
+    border-right: 1px solid #313244; /* Surface0 */
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+    margin: 4px;
 }
 
 .boxed-list {
     background-color: transparent;
-    color: #e0e0ff;
+    color: #cdd6f4;
 }
 
 row:selected {
-    background-color: #2a0033;
-    color: #00f3ff;
-    border-left: 2px solid #ff00ff;
+    background-color: rgba(203, 166, 247, 0.2); /* Mauve transparent */
+    color: #cba6f7; /* Mauve */
+    border-left: 3px solid #f5c2e7; /* Pink */
+    border-radius: 8px;
+    margin: 2px 8px;
 }
 
 /* Player Area */
 .player-container {
-    background: linear-gradient(160deg, #0f0f20 0%, #050510 100%);
+    background: linear-gradient(160deg, rgba(30, 30, 46, 0.8) 0%, rgba(17, 17, 27, 0.9) 100%);
     padding: 20px;
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
 }
 
 .track-title {
-    color: #ff00ff;
+    color: #f5c2e7; /* Pink */
     font-weight: 900;
     font-size: 22px;
-    text-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+    text-shadow: 0 0 12px rgba(245, 194, 231, 0.3);
 }
 
 .station-name {
-    color: #00f3ff;
+    color: #89b4fa; /* Blue */
     font-weight: bold;
     font-size: 14px;
-    opacity: 0.8;
+    opacity: 0.9;
     margin-bottom: 10px;
 }
 
 /* Buttons */
 button.suggested-action {
-    background: linear-gradient(135deg, #bd00ff 0%, #00f3ff 100%);
-    color: #000000;
+    background: linear-gradient(135deg, #cba6f7 0%, #f5c2e7 100%); /* Mauve to Pink */
+    color: #1e1e2e; /* Base */
     font-weight: 800;
     border: none;
-    box-shadow: 0 0 20px rgba(189, 0, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(203, 166, 247, 0.4);
+    transition: all 0.2s ease;
 }
 
 button.suggested-action:hover {
-    box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+    box-shadow: 0 6px 20px rgba(245, 194, 231, 0.6);
+    transform: translateY(-2px);
 }
 
 /* Sliders */
 scale trough {
-    background-color: #2a2a40;
-    min-height: 4px;
-    border-radius: 2px;
+    background-color: #45475a; /* Surface1 */
+    min-height: 6px;
+    border-radius: 3px;
 }
 
 scale highlight {
-    background: linear-gradient(to right, #ff00ff, #00f3ff);
+    background: linear-gradient(to right, #f5c2e7, #cba6f7); /* Pink to Mauve */
+    border-radius: 3px;
+}
+
+/* Visualizer Bars */
+.vis-bar block {
+    background: linear-gradient(to top, #cba6f7, #f5c2e7); /* Mauve to Pink */
     border-radius: 2px;
+    min-height: 2px;
+}
+
+.vis-bar.empty block {
+    background-color: #313244; /* Surface0 for empty/bg */
 }
