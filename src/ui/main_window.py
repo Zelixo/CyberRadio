@@ -339,24 +339,27 @@ class MainWindow(Adw.ApplicationWindow):
             # Card Container
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2) # Tighter spacing
             card.add_css_class("station-card")
-            card.set_size_request(-1, 160) 
+            card.set_size_request(-1, 190) # Taller to fit vertical text
             
             # Icon
             icon = Gtk.Image()
             icon.add_css_class("station-icon")
-            icon.set_pixel_size(112) # Massive Icon
+            icon.set_pixel_size(100) # Slightly smaller to give room for big text
             favicon = station.get("favicon")
             if favicon:
-                load_image_into(favicon, icon, self._loaded_textures, size=112)
+                load_image_into(favicon, icon, self._loaded_textures, size=100)
             else:
                 icon.set_from_icon_name("audio-x-generic-symbolic")
             card.append(icon)
 
-            # Label
-            lbl = Gtk.Label(label=station.get("name", "Unknown"))
+            # Label (Vertical Stack)
+            raw_name = station.get("name", "Unknown")
+            stacked_name = raw_name.replace(" ", "\n")
+            
+            lbl = Gtk.Label(label=stacked_name)
             lbl.add_css_class("station-label")
-            lbl.set_ellipsize(3) # End
-            lbl.set_max_width_chars(15)
+            lbl.set_justify(Gtk.Justification.CENTER)
+            lbl.set_wrap(True)
             card.append(lbl)
 
             # Click Controller
