@@ -91,24 +91,25 @@ headerbar windowhandle {
     margin-top: 5px;
 }
 
-/* Navigation Buttons in Grid */
-.nav-btn {
+/* Navigation Buttons in Footer */
+.nav-btn-compact {
     background-color: rgba(30, 30, 46, 0.6); /* Darker base */
     color: #cba6f7; /* Mauve */
-    font-size: 20px;
+    font-size: 16px;
     font-weight: bold;
     border-radius: 12px;
     border: 1px solid rgba(203, 166, 247, 0.2);
-    min-height: 80px; /* Match approximate card height */
+    min-height: 40px; /* Half height */
+    margin-top: 5px;
 }
 
-.nav-btn:hover {
+.nav-btn-compact:hover {
     background-color: rgba(203, 166, 247, 0.2);
     border-color: #cba6f7;
     box-shadow: 0 0 10px rgba(203, 166, 247, 0.2);
 }
 
-.nav-btn:disabled {
+.nav-btn-compact:disabled {
     color: #585b70; /* Surface2 */
     background-color: rgba(30, 30, 46, 0.3);
     border-color: transparent;

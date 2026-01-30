@@ -75,7 +75,7 @@ class MainWindow(Adw.ApplicationWindow):
         # Station Grid (FlowBox)
         # Replaces ScrolledWindow/ListBox for a fixed page grid
         self.flow_box = Gtk.FlowBox()
-        self.flow_box.set_valign(Gtk.Align.START)
+        self.flow_box.set_valign(Gtk.Align.FILL) # Fill vertical space
         self.flow_box.set_min_children_per_line(2)
         self.flow_box.set_max_children_per_line(2)
         self.flow_box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -83,11 +83,33 @@ class MainWindow(Adw.ApplicationWindow):
         self.flow_box.set_column_spacing(10)
         self.flow_box.set_homogeneous(True)
         
-        # Container to hold flowbox (no scrolling, just paging)
-        grid_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # Container to hold flowbox (expandable)
+        grid_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         grid_container.set_vexpand(True)
         grid_container.set_hexpand(True)
         grid_container.append(self.flow_box)
+
+        # Navigation Footer (External to FlowBox)
+        self.nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self.nav_box.set_halign(Gtk.Align.FILL)
+        self.nav_box.set_valign(Gtk.Align.END)
+        self.nav_box.set_margin_bottom(5)
+        self.nav_box.set_margin_start(5)
+        self.nav_box.set_margin_end(5)
+
+        self.prev_btn = Gtk.Button(label="") # F053
+        self.prev_btn.add_css_class("nav-btn-compact")
+        self.prev_btn.set_hexpand(True)
+        self.prev_btn.connect("clicked", self.on_page_prev)
+        self.nav_box.append(self.prev_btn)
+
+        self.next_btn = Gtk.Button(label="") # F054
+        self.next_btn.add_css_class("nav-btn-compact")
+        self.next_btn.set_hexpand(True)
+        self.next_btn.connect("clicked", self.on_page_next)
+        self.nav_box.append(self.next_btn)
+
+        grid_container.append(self.nav_box)
         
         self.sidebar.append(grid_container)
 
@@ -315,15 +337,15 @@ class MainWindow(Adw.ApplicationWindow):
             # Card Container
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             card.add_css_class("station-card")
-            card.set_size_request(-1, 90) # Fixed height for uniformity
+            card.set_size_request(-1, 125) # Bigger Square-ish
             
             # Icon
             icon = Gtk.Image()
             icon.add_css_class("station-icon")
-            icon.set_pixel_size(48)
+            icon.set_pixel_size(64) # Bigger Icon
             favicon = station.get("favicon")
             if favicon:
-                load_image_into(favicon, icon, self._loaded_textures, size=48)
+                load_image_into(favicon, icon, self._loaded_textures, size=64)
             else:
                 icon.set_from_icon_name("audio-x-generic-symbolic")
             card.append(icon)
@@ -341,24 +363,20 @@ class MainWindow(Adw.ApplicationWindow):
             gesture.connect("pressed", lambda g, n, x, y, s=station: self._on_grid_item_clicked(g, n, x, y, s))
             card.add_controller(gesture)
             
-            # Context Menu (Right Click) logic is handled in _on_grid_item_clicked
-
             self.flow_box.append(card)
 
-        # --- Pagination Buttons (Last 2 slots) ---
-        # Prev Button
-        prev_btn = Gtk.Button(label="") # F053
-        prev_btn.add_css_class("nav-btn")
-        prev_btn.set_sensitive(self.current_page > 0)
-        prev_btn.connect("clicked", self.on_page_prev)
-        self.flow_box.append(prev_btn)
+        # Update external Nav Buttons
+        self._update_nav_buttons(total_items)
 
-        # Next Button
-        next_btn = Gtk.Button(label="") # F054
-        next_btn.add_css_class("nav-btn")
-        next_btn.set_sensitive(end_idx < total_items)
-        next_btn.connect("clicked", self.on_page_next)
-        self.flow_box.append(next_btn)
+    def _update_nav_buttons(self, total_items):
+        start_idx = self.current_page * self.ITEMS_PER_PAGE
+        end_idx = min(start_idx + self.ITEMS_PER_PAGE, total_items)
+        
+        # Prev: Enabled if not on first page
+        self.prev_btn.set_sensitive(self.current_page > 0)
+        
+        # Next: Enabled if there are more items after this page
+        self.next_btn.set_sensitive(end_idx < total_items)
 
     def _on_grid_item_clicked(self, gesture, n_press, x, y, station):
         button = gesture.get_current_button()
