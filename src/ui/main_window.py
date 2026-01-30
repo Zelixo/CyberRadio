@@ -224,7 +224,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         # --- INIT ---
         self.current_page = 0
-        self.ITEMS_PER_PAGE = 6 # 6 Stations + 2 Nav buttons = 8 slots (4 rows)
+        self.ITEMS_PER_PAGE = 4 # 4 Big Stations
         
         self._populate_grid(self.favorites)
         self.player = AudioPlayer(self.on_mpv_metadata, self.on_mpv_discontinuity)
@@ -339,15 +339,15 @@ class MainWindow(Adw.ApplicationWindow):
             # Card Container
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             card.add_css_class("station-card")
-            card.set_size_request(-1, 125) # Bigger Square-ish
+            card.set_size_request(-1, 160) # Much Bigger Square
             
             # Icon
             icon = Gtk.Image()
             icon.add_css_class("station-icon")
-            icon.set_pixel_size(64) # Bigger Icon
+            icon.set_pixel_size(96) # Big Icon
             favicon = station.get("favicon")
             if favicon:
-                load_image_into(favicon, icon, self._loaded_textures, size=64)
+                load_image_into(favicon, icon, self._loaded_textures, size=96)
             else:
                 icon.set_from_icon_name("audio-x-generic-symbolic")
             card.append(icon)
@@ -356,7 +356,7 @@ class MainWindow(Adw.ApplicationWindow):
             lbl = Gtk.Label(label=station.get("name", "Unknown"))
             lbl.add_css_class("station-label")
             lbl.set_ellipsize(3) # End
-            lbl.set_max_width_chars(12)
+            lbl.set_max_width_chars(15)
             card.append(lbl)
 
             # Click Controller

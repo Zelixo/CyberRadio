@@ -62,7 +62,7 @@ headerbar windowhandle {
 .station-card {
     background-color: rgba(49, 50, 68, 0.4); /* Surface0 */
     border-radius: 12px;
-    padding: 10px;
+    padding: 15px;
     transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     border: 1px solid transparent;
 }
@@ -86,9 +86,9 @@ headerbar windowhandle {
 
 .station-label {
     color: #cdd6f4;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: bold;
-    margin-top: 5px;
+    margin-top: 8px;
 }
 
 /* Navigation Buttons in Footer */
