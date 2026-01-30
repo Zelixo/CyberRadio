@@ -102,12 +102,14 @@ class MainWindow(Adw.ApplicationWindow):
         self.prev_btn = Gtk.Button(label="") # F053
         self.prev_btn.add_css_class("nav-btn-compact")
         self.prev_btn.set_hexpand(True)
+        self.prev_btn.set_size_request(-1, 40) # Lock Height
         self.prev_btn.connect("clicked", self.on_page_prev)
         self.nav_box.append(self.prev_btn)
 
         self.next_btn = Gtk.Button(label="") # F054
         self.next_btn.add_css_class("nav-btn-compact")
         self.next_btn.set_hexpand(True)
+        self.next_btn.set_size_request(-1, 40) # Lock Height
         self.next_btn.connect("clicked", self.on_page_next)
         self.nav_box.append(self.next_btn)
 
@@ -339,7 +341,7 @@ class MainWindow(Adw.ApplicationWindow):
             # Card Container
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2) # Tighter spacing
             card.add_css_class("station-card")
-            card.set_size_request(-1, 190) # Taller to fit vertical text
+            card.set_size_request(140, 190) # Fixed W & H to lock layout
             
             # Icon
             icon = Gtk.Image()
@@ -369,6 +371,14 @@ class MainWindow(Adw.ApplicationWindow):
             card.add_controller(gesture)
             
             self.flow_box.append(card)
+
+        # Fillers to maintain grid shape
+        items_on_page = len(page_items)
+        if items_on_page < self.ITEMS_PER_PAGE:
+            for _ in range(self.ITEMS_PER_PAGE - items_on_page):
+                filler = Gtk.Box()
+                filler.set_size_request(140, 190)
+                self.flow_box.append(filler)
 
         # Update external Nav Buttons
         self._update_nav_buttons(total_items)
