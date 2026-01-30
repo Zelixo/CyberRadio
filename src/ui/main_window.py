@@ -72,17 +72,24 @@ class MainWindow(Adw.ApplicationWindow):
 
         self.sidebar.append(sb_header)
 
-        # Station List
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_vexpand(True)
-        self.list_box = Gtk.ListBox()
-        self.list_box.add_css_class("boxed-list")
-        self.list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        self.list_box.set_activate_on_single_click(True)
-        self.list_box.connect("row-activated", self.on_station_selected)
-
-        scrolled.set_child(self.list_box)
-        self.sidebar.append(scrolled)
+        # Station Grid (FlowBox)
+        # Replaces ScrolledWindow/ListBox for a fixed page grid
+        self.flow_box = Gtk.FlowBox()
+        self.flow_box.set_valign(Gtk.Align.START)
+        self.flow_box.set_min_children_per_line(2)
+        self.flow_box.set_max_children_per_line(2)
+        self.flow_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.flow_box.set_row_spacing(10)
+        self.flow_box.set_column_spacing(10)
+        self.flow_box.set_homogeneous(True)
+        
+        # Container to hold flowbox (no scrolling, just paging)
+        grid_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        grid_container.set_vexpand(True)
+        grid_container.set_hexpand(True)
+        grid_container.append(self.flow_box)
+        
+        self.sidebar.append(grid_container)
 
         # ==========================
         # 2. PLAYER (Right Panel)
@@ -192,7 +199,10 @@ class MainWindow(Adw.ApplicationWindow):
         self.player_box.append(controls_row)
 
         # --- INIT ---
-        self._populate_list(self.favorites)
+        self.current_page = 0
+        self.ITEMS_PER_PAGE = 6 # 6 Stations + 2 Nav buttons = 8 slots (4 rows)
+        
+        self._populate_grid(self.favorites)
         self.player = AudioPlayer(self.on_mpv_metadata, self.on_mpv_discontinuity)
         self.player.set_volume(50)
 
@@ -234,8 +244,8 @@ class MainWindow(Adw.ApplicationWindow):
 
         if updated:
             self.save_favorites()
-            if hasattr(self, 'list_box'):
-                self._populate_list(self.favorites)
+            if hasattr(self, 'flow_box'):
+                self._populate_grid(self.favorites)
 
     # --- UI UPDATERS ---
     def _update_visualizer_loop(self):
@@ -290,53 +300,112 @@ class MainWindow(Adw.ApplicationWindow):
                 target_art = self.current_station_data.get('favicon')
             load_image_into(target_art, self.art_picture, self._loaded_textures)
 
-    # --- LIST LOGIC ---
-    def _populate_list(self, stations):
-        while True:
-            row = self.list_box.get_row_at_index(0)
-            if row is None: break
-            self.list_box.remove(row)
+    # --- LIST/GRID LOGIC ---
+    def _populate_grid(self, stations):
+        # Clear existing
+        self.flow_box.remove_all()
 
-        for station in stations:
-            row_content = Adw.ActionRow()
-            name = station.get("name")
-            country = station.get("countrycode") or "??"
-            url = station.get("url_resolved") or station.get("url")
-            favicon = station.get("favicon")
+        total_items = len(stations)
+        start_idx = self.current_page * self.ITEMS_PER_PAGE
+        end_idx = min(start_idx + self.ITEMS_PER_PAGE, total_items)
+        
+        page_items = stations[start_idx:end_idx]
 
-            if not url: continue
-
-            row_content.set_title(name)
-            if len(name) > 15:
-                row_content.set_tooltip_text(name)
-
-            # Icon fallback for list rows (can keep Image or use Label)
-            # Keeping Image here as load_image_into expects it
-            icon = Gtk.Image()
-            icon.set_pixel_size(24)
-            # Placeholder if no favicon
-            icon.set_from_icon_name("audio-x-generic-symbolic")
-
-            if favicon:
-                load_image_into(favicon, icon, self._loaded_textures, size=24)
-
-            row_content.add_prefix(icon)
-            row_content.station_data = station
-
-            del_btn = Gtk.Button(label="") # F1F8
-            del_btn.add_css_class("flat")
-            del_btn.connect("clicked", lambda b, s=station: self.delete_favorite_direct(s))
+        for station in page_items:
+            # Card Container
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+            card.add_css_class("station-card")
+            card.set_size_request(-1, 90) # Fixed height for uniformity
             
-            edit_btn = Gtk.Button(label="") # F044
-            edit_btn.add_css_class("flat")
-            edit_btn.connect("clicked", lambda b, s=station: self.on_edit_clicked(s))
+            # Icon
+            icon = Gtk.Image()
+            icon.add_css_class("station-icon")
+            icon.set_pixel_size(48)
+            favicon = station.get("favicon")
+            if favicon:
+                load_image_into(favicon, icon, self._loaded_textures, size=48)
+            else:
+                icon.set_from_icon_name("audio-x-generic-symbolic")
+            card.append(icon)
 
-            row_content.add_suffix(edit_btn)
-            row_content.add_suffix(del_btn)
+            # Label
+            lbl = Gtk.Label(label=station.get("name", "Unknown"))
+            lbl.add_css_class("station-label")
+            lbl.set_ellipsize(3) # End
+            lbl.set_max_width_chars(12)
+            card.append(lbl)
 
-            list_row = Gtk.ListBoxRow()
-            list_row.set_child(row_content)
-            self.list_box.append(list_row)
+            # Click Controller
+            gesture = Gtk.GestureClick()
+            gesture.set_button(0) # All buttons
+            gesture.connect("pressed", lambda g, n, x, y, s=station: self._on_grid_item_clicked(g, n, x, y, s))
+            card.add_controller(gesture)
+            
+            # Context Menu (Right Click) logic is handled in _on_grid_item_clicked
+
+            self.flow_box.append(card)
+
+        # --- Pagination Buttons (Last 2 slots) ---
+        # Prev Button
+        prev_btn = Gtk.Button(label="") # F053
+        prev_btn.add_css_class("nav-btn")
+        prev_btn.set_sensitive(self.current_page > 0)
+        prev_btn.connect("clicked", self.on_page_prev)
+        self.flow_box.append(prev_btn)
+
+        # Next Button
+        next_btn = Gtk.Button(label="") # F054
+        next_btn.add_css_class("nav-btn")
+        next_btn.set_sensitive(end_idx < total_items)
+        next_btn.connect("clicked", self.on_page_next)
+        self.flow_box.append(next_btn)
+
+    def _on_grid_item_clicked(self, gesture, n_press, x, y, station):
+        button = gesture.get_current_button()
+        if button == Gdk.BUTTON_PRIMARY: # Left Click
+            self._play_station(station)
+        elif button == Gdk.BUTTON_SECONDARY: # Right Click
+            self._show_context_menu(station, gesture)
+
+    def _show_context_menu(self, station, gesture):
+        popover = Gtk.Popover()
+        popover.set_parent(gesture.get_widget())
+        
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        box.set_margin_top(5)
+        box.set_margin_bottom(5)
+        box.set_margin_start(5)
+        box.set_margin_end(5)
+        
+        edit_btn = Gtk.Button(label="Edit Station")
+        edit_btn.add_css_class("flat")
+        edit_btn.connect("clicked", lambda b: (self.on_edit_clicked(station), popover.popdown()))
+        box.append(edit_btn)
+        
+        del_btn = Gtk.Button(label="Delete Station")
+        del_btn.add_css_class("destructive-action") # Red
+        del_btn.connect("clicked", lambda b: (self.delete_favorite_direct(station), popover.popdown()))
+        box.append(del_btn)
+        
+        popover.set_child(box)
+        popover.popup()
+
+    def on_page_prev(self, btn):
+        if self.current_page > 0:
+            self.current_page -= 1
+            if self.search_entry.get_text():
+                 # Re-search to get filtered list
+                 self._perform_search(self.search_entry.get_text())
+            else:
+                 self._populate_grid(self.favorites)
+
+    def on_page_next(self, btn):
+        # Check boundary? We do it lazily by re-populating
+        self.current_page += 1
+        if self.search_entry.get_text():
+             self._perform_search(self.search_entry.get_text())
+        else:
+             self._populate_grid(self.favorites)
 
     # --- RECOGNITION LOGIC ---
     def on_recognize_clicked(self, btn):
@@ -467,7 +536,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.fav_btn_player.set_label("") # Star F005
         self.save_favorites()
         if not self.search_entry.get_text():
-            self._populate_list(self.favorites)
+            self._populate_grid(self.favorites)
 
     def check_is_favorite(self, url):
         exists = any(f.get('url_resolved') == url for f in self.favorites)
@@ -475,17 +544,19 @@ class MainWindow(Adw.ApplicationWindow):
         self.fav_btn_player.set_label(icon)
 
     def on_search_activate(self, entry):
+        self.current_page = 0 # Reset page on new search
         query = entry.get_text()
         if query:
             threading.Thread(target=self._perform_search, args=(query,), daemon=True).start()
 
     def _perform_search(self, query):
         data = search_stations(query)
-        GLib.idle_add(self._populate_list, data)
+        GLib.idle_add(self._populate_grid, data)
 
     def on_search_changed(self, entry):
         if not entry.get_text():
-            self._populate_list(self.favorites)
+            self.current_page = 0
+            self._populate_grid(self.favorites)
 
     def load_favorites(self):
         if os.path.exists(FAVORITES_FILE):
@@ -501,7 +572,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.save_favorites()
 
         if not self.search_entry.get_text():
-            self._populate_list(self.favorites)
+            self._populate_grid(self.favorites)
 
         if self.current_station_data and self.current_station_data['url_resolved'] == s['url_resolved']:
              self.check_is_favorite(s['url_resolved'])
@@ -527,7 +598,7 @@ class MainWindow(Adw.ApplicationWindow):
             
         self.save_favorites()
         if not self.search_entry.get_text():
-            self._populate_list(self.favorites)
+            self._populate_grid(self.favorites)
         
         # If we updated the currently playing station, update the UI
         if self.current_station_data and old_data and self.current_station_data.get('url_resolved') == old_data.get('url_resolved'):

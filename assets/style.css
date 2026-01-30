@@ -58,29 +58,65 @@ headerbar windowhandle {
     border-radius: 12px;
 }
 
-/* List Rows - Pill Style */
-.boxed-list {
-    background-color: transparent;
-}
-
-row {
-    background-color: rgba(49, 50, 68, 0.2); /* Surface0 very transparent */
+/* Sidebar Grid - FlowBox */
+.station-card {
+    background-color: rgba(49, 50, 68, 0.4); /* Surface0 */
     border-radius: 12px;
-    margin: 4px 0px;
-    padding: 6px;
+    padding: 10px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     border: 1px solid transparent;
-    transition: all 0.2s;
 }
 
-row:hover {
-    background-color: rgba(69, 71, 90, 0.4); /* Surface1 */
+.station-card:hover {
+    background-color: rgba(69, 71, 90, 0.6); /* Surface1 */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border-color: rgba(203, 166, 247, 0.3); /* Mauve hint */
 }
 
-row:selected {
-    background-color: rgba(203, 166, 247, 0.15); /* Mauve tint */
-    color: #cba6f7;
-    border: 1px solid rgba(203, 166, 247, 0.5);
+.station-card:active {
+    transform: scale(0.98);
 }
+
+.station-icon {
+    border-radius: 8px; /* Round the icon slightly */
+    /* GtkImage doesn't support border-radius directly usually, relies on clip or mask. 
+       If this doesn't work, it's fine. */
+}
+
+.station-label {
+    color: #cdd6f4;
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* Navigation Buttons in Grid */
+.nav-btn {
+    background-color: rgba(30, 30, 46, 0.6); /* Darker base */
+    color: #cba6f7; /* Mauve */
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 12px;
+    border: 1px solid rgba(203, 166, 247, 0.2);
+    min-height: 80px; /* Match approximate card height */
+}
+
+.nav-btn:hover {
+    background-color: rgba(203, 166, 247, 0.2);
+    border-color: #cba6f7;
+    box-shadow: 0 0 10px rgba(203, 166, 247, 0.2);
+}
+
+.nav-btn:disabled {
+    color: #585b70; /* Surface2 */
+    background-color: rgba(30, 30, 46, 0.3);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+/* List Rows - Pill Style (REMOVED - now using Grid) */
+/* .boxed-list { ... } */
 
 /* Text & Labels */
 .track-title {
