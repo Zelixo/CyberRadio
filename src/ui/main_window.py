@@ -50,7 +50,7 @@ class MainWindow(Adw.ApplicationWindow):
         # ==========================
         self.sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.sidebar.add_css_class("sidebar-box")
-        self.sidebar.set_size_request(240, -1)
+        self.sidebar.set_size_request(320, -1) # Wider sidebar for bigger cards
         self.sidebar.set_hexpand(False)
         self.sidebar.set_vexpand(True) # Maximize height
         main_box.append(self.sidebar)
@@ -337,17 +337,17 @@ class MainWindow(Adw.ApplicationWindow):
 
         for station in page_items:
             # Card Container
-            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2) # Tighter spacing
             card.add_css_class("station-card")
-            card.set_size_request(-1, 160) # Much Bigger Square
+            card.set_size_request(-1, 160) 
             
             # Icon
             icon = Gtk.Image()
             icon.add_css_class("station-icon")
-            icon.set_pixel_size(96) # Big Icon
+            icon.set_pixel_size(112) # Massive Icon
             favicon = station.get("favicon")
             if favicon:
-                load_image_into(favicon, icon, self._loaded_textures, size=96)
+                load_image_into(favicon, icon, self._loaded_textures, size=112)
             else:
                 icon.set_from_icon_name("audio-x-generic-symbolic")
             card.append(icon)
