@@ -78,11 +78,6 @@ class MainWindow(Adw.ApplicationWindow):
         sidebar_box.set_size_request(220, -1)
         sidebar_box.set_hexpand(False)
 
-        sidebar_box.set_margin_top(10)
-        sidebar_box.set_margin_start(5)
-        sidebar_box.set_margin_end(0)
-        sidebar_box.set_margin_bottom(10)
-
         # Controls (Add)
         sidebar_ctrls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
         sidebar_ctrls.set_margin_start(10)
@@ -105,8 +100,6 @@ class MainWindow(Adw.ApplicationWindow):
         # Search
         self.search_entry = Gtk.SearchEntry()
         self.search_entry.set_placeholder_text("Search...")
-        self.search_entry.set_margin_start(5)
-        self.search_entry.set_margin_end(5)
         self.search_entry.connect("activate", self.on_search_activate)
         self.search_entry.connect("search-changed", self.on_search_changed)
         sidebar_box.append(self.search_entry)

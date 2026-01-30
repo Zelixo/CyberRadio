@@ -1,94 +1,175 @@
+/* Global Settings & Font */
+* {
+    font-family: 'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', monospace;
+    font-weight: 600;
+}
+
 window.background {
     background-color: transparent;
 }
 
 .cyber-window {
-    background-color: rgba(30, 30, 46, 0.90); /* Catppuccin Mocha Base with transparency */
+    background-color: rgba(30, 30, 46, 0.6); /* Very transparent Base for blur */
     color: #cdd6f4; /* Text */
     border-radius: 16px;
-    border: 2px solid #cba6f7; /* Mauve Border */
+    /* No border on main window, let the panels define the shape */
 }
 
-/* Sidebar styling */
+/* HeaderBar - Floating & Minimal */
+headerbar {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 10px 10px 0 10px; /* Gap at top */
+    min-height: 40px;
+}
+
+headerbar windowhandle {
+    background: transparent;
+}
+
+/* Sidebar - Floating Card */
 .sidebar-box {
-    background-color: rgba(24, 24, 37, 0.6); /* Mantle transparent */
-    border-right: 1px solid #313244; /* Surface0 */
-    border-top-left-radius: 14px;
-    border-bottom-left-radius: 14px;
-    margin: 4px;
+    background-color: rgba(24, 24, 37, 0.7); /* Mantle */
+    border: 1px solid rgba(49, 50, 68, 0.5); /* Surface0 */
+    border-radius: 16px;
+    margin: 10px 5px 10px 10px; /* Gaps: Top/Bot=10, Left=10, Right=5 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Player - Floating Card */
+.player-container {
+    background: linear-gradient(160deg, rgba(30, 30, 46, 0.85) 0%, rgba(24, 24, 37, 0.9) 100%);
+    border: 1px solid rgba(49, 50, 68, 0.5); /* Surface0 */
+    border-radius: 16px;
+    margin: 10px 10px 10px 5px; /* Gaps: Top/Bot=10, Left=5, Right=10 */
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* List Rows - Pill Style */
 .boxed-list {
     background-color: transparent;
-    color: #cdd6f4;
+}
+
+row {
+    background-color: rgba(49, 50, 68, 0.2); /* Surface0 very transparent */
+    border-radius: 12px;
+    margin: 4px 8px; /* Vertical gap between items */
+    padding: 8px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+row:hover {
+    background-color: rgba(69, 71, 90, 0.4); /* Surface1 */
+    transform: translateY(-1px);
 }
 
 row:selected {
-    background-color: rgba(203, 166, 247, 0.2); /* Mauve transparent */
+    background-color: rgba(203, 166, 247, 0.15); /* Mauve tint */
     color: #cba6f7; /* Mauve */
-    border-left: 3px solid #f5c2e7; /* Pink */
-    border-radius: 8px;
-    margin: 2px 8px;
+    border: 1px solid rgba(203, 166, 247, 0.5); /* Mauve border */
+    border-left: 1px solid rgba(203, 166, 247, 0.5); /* Overwrite previous left-border style */
+    box-shadow: 0 0 10px rgba(203, 166, 247, 0.1);
 }
 
-/* Player Area */
-.player-container {
-    background: linear-gradient(160deg, rgba(30, 30, 46, 0.8) 0%, rgba(17, 17, 27, 0.9) 100%);
-    padding: 20px;
-    border-top-right-radius: 14px;
-    border-bottom-right-radius: 14px;
-}
-
+/* Text & Labels */
 .track-title {
     color: #f5c2e7; /* Pink */
     font-weight: 900;
-    font-size: 22px;
-    text-shadow: 0 0 12px rgba(245, 194, 231, 0.3);
+    font-size: 24px;
+    text-shadow: 0 2px 10px rgba(245, 194, 231, 0.2);
+    letter-spacing: -0.5px;
 }
 
 .station-name {
+    background-color: rgba(137, 180, 250, 0.15); /* Blue bg pill */
     color: #89b4fa; /* Blue */
     font-weight: bold;
-    font-size: 14px;
-    opacity: 0.9;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+/* Inputs (Search) */
+entry {
+    background-color: rgba(30, 30, 46, 0.8); /* Base */
+    border: 1px solid #45475a; /* Surface1 */
+    border-radius: 12px;
+    color: #cdd6f4;
+    caret-color: #f5c2e7;
     margin-bottom: 10px;
 }
 
+entry:focus-within {
+    border: 1px solid #cba6f7; /* Mauve */
+    box-shadow: 0 0 0 2px rgba(203, 166, 247, 0.1);
+}
+
 /* Buttons */
+button {
+    border-radius: 10px;
+}
+
+button.flat {
+    color: #bac2de; /* Subtext1 */
+    transition: all 0.2s;
+}
+
+button.flat:hover {
+    background-color: rgba(203, 166, 247, 0.15);
+    color: #cdd6f4;
+}
+
 button.suggested-action {
     background: linear-gradient(135deg, #cba6f7 0%, #f5c2e7 100%); /* Mauve to Pink */
     color: #1e1e2e; /* Base */
     font-weight: 800;
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(203, 166, 247, 0.4);
-    transition: all 0.2s ease;
+    border-radius: 100px; /* Pill/Circle */
+    box-shadow: 0 4px 15px rgba(203, 166, 247, 0.3);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy */
 }
 
 button.suggested-action:hover {
-    box-shadow: 0 6px 20px rgba(245, 194, 231, 0.6);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(245, 194, 231, 0.5);
+    transform: scale(1.05);
+}
+
+button.suggested-action:active {
+    transform: scale(0.95);
 }
 
 /* Sliders */
 scale trough {
     background-color: #45475a; /* Surface1 */
-    min-height: 6px;
-    border-radius: 3px;
+    min-height: 8px;
+    border-radius: 10px;
 }
 
 scale highlight {
     background: linear-gradient(to right, #f5c2e7, #cba6f7); /* Pink to Mauve */
-    border-radius: 3px;
+    border-radius: 10px;
+}
+
+slider {
+    background-color: #f5c2e7;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    min-height: 18px;
+    min-width: 18px;
+    border-radius: 50%;
 }
 
 /* Visualizer Bars */
 .vis-bar block {
     background: linear-gradient(to top, #cba6f7, #f5c2e7); /* Mauve to Pink */
     border-radius: 2px;
-    min-height: 2px;
+    min-height: 3px;
 }
 
 .vis-bar.empty block {
-    background-color: #313244; /* Surface0 for empty/bg */
+    background-color: rgba(49, 50, 68, 0.3); /* Surface0 transparent */
 }

@@ -50,10 +50,12 @@ This module will display the content of the `now_playing.txt` file that Cyber Ra
 
 ## 4. Theming and Transparency
 
-The application now features a dedicated **"Hyprland Kath"** aesthetic out of the box. This includes:
+The application now features a dedicated **"Hyprland Kath Ricer"** aesthetic out of the box. This includes:
 
 *   **Catppuccin Mocha-inspired Palette:** Deep dark blues, soft pastels (Pink, Mauve, Sky Blue).
-*   **Rounded Corners:** 16px border radius on the main window and UI elements.
+*   **Floating Gaps Layout:** The sidebar and player panels now float with gaps (`10px`) and rounded corners (`16px`), mimicking the tiling window manager "gaps" aesthetic.
+*   **Nerd Fonts:** The UI defaults to `JetBrainsMono Nerd Font` (or `FiraCode`) for that authentic terminal vibe.
+*   **Pill Styling:** List items and buttons feature rounded "pill" styling with subtle hover effects.
 *   **Translucency:** Optimized for Hyprland's blur (try `decoration:blur = true` in your `hyprland.conf`).
 *   **Enhanced Visuals:** The "Vector Cat" visualization now features:
     *   Smoother animations (bouncier tail, happy eyes).
