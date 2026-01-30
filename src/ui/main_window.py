@@ -52,6 +52,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.sidebar.add_css_class("sidebar-box")
         self.sidebar.set_size_request(240, -1)
         self.sidebar.set_hexpand(False)
+        self.sidebar.set_vexpand(True) # Maximize height
         main_box.append(self.sidebar)
 
         # Sidebar Header: Search + Add
@@ -76,6 +77,7 @@ class MainWindow(Adw.ApplicationWindow):
         # Replaces ScrolledWindow/ListBox for a fixed page grid
         self.flow_box = Gtk.FlowBox()
         self.flow_box.set_valign(Gtk.Align.FILL) # Fill vertical space
+        self.flow_box.set_vexpand(True) # Push Nav Box down
         self.flow_box.set_min_children_per_line(2)
         self.flow_box.set_max_children_per_line(2)
         self.flow_box.set_selection_mode(Gtk.SelectionMode.NONE)
